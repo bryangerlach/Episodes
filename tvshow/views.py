@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
-from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes
+from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, download_image
 from .utils.recommender import get_recommendations
 from .models import Show,Season,Episode
 from django.db.models import Q
@@ -68,8 +68,9 @@ def add(request):
                     season = Season()
                     season.add_season(show, i+1)
                     season_episodes_data = seasons_data[string]
-                    for season_episode in season_episodes_data:
-                        if season_episode['episodeName']:
+                    for season_episode in season_episodes_data['episodes']:
+                        print(season_episode)
+                        if season_episode['name']:
                             episode = Episode()
                             episode.add_episode(season, season_episode)
         return HttpResponseRedirect('/show/%s'%slug)
@@ -82,10 +83,17 @@ def add_search(request):
     context['Flag'] = False
     if request.method == 'POST':
         search_string = request.POST.get('search_string')
-        show_datalist = search_series_list(search_string)
+        show_datalist_full = search_series_list(search_string)
+        show_datalist = show_datalist_full[:10]
         if show_datalist is not None:
+            for show in show_datalist:
+                try:
+                    show['image'] = download_image(show['tvdb_id'])
+                except:
+                    pass
             context['Flag'] = True
             context['show_datalist'] = show_datalist
+        
     return render(request, 'tvshow/add_search.html', {'context':context})
 
 @csrf_protect

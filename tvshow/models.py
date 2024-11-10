@@ -29,16 +29,16 @@ class Show(models.Model):
 		return self.seriesName
 
 	def add_show(self, data, runningStatus):
-		self.seriesName = data['seriesName']
+		self.seriesName = data['name']
 		self.slug = slugify(self.seriesName)
 		self.overview = data['overview']
-		self.banner = 'http://thetvdb.com/banners/' + data['banner']
-		self.imbdID = data['imdbID']
-		self.tvdbID = data['tvdbID']
-		self.siteRating = data['siteRating']
-		self.network = data['network']
+		self.banner = download_image(data['id'])
+		self.imbdID = data['id'] #doesn't exist
+		self.tvdbID = data['id']
+		#self.siteRating = data['score']
+		self.network = data['originalNetwork']
 		self.runningStatus = runningStatus
-		self.genre_list = json.dumps(data['genre'])
+		self.genre_list = json.dumps(data['genres'])
 		self.last_updated = timezone.now()
 		try:
 			self.firstAired = datetime.strptime(data['firstAired'], '%Y-%m-%d').date()
@@ -51,7 +51,7 @@ class Show(models.Model):
 		flag = True
 		season_count = Season.objects.filter(show = self)
 		for season in season_count:
-			if season.status_watched_check is False and season.episode_count is not 0:
+			if not season.status_watched_check and season.episode_count != 0:
 				flag=False
 				break
 		return flag
@@ -85,7 +85,7 @@ class Show(models.Model):
 				counter+=1
 			if counter < len(current_season_oln_data):
 				for new_episode in current_season_oln_data[counter:]:
-					if new_episode['episodeName'] is "":
+					if new_episode['episodeName'] == "":
 						new_episode['episodeName'] = 'TBA'
 					episode = Episode()
 					episode.add_episode(current_season,new_episode)
@@ -122,7 +122,7 @@ class Season(models.Model):
 
 	def wst(self):
 		self.show.save()
-		if self.status_watched == True:
+		if self.status_watched:
 			self.episode_set.all().update(status_watched = False)
 			self.status_watched = False
 			self.save()
@@ -164,13 +164,13 @@ class Episode(models.Model):
 
 	def add_episode(self, season, data):
 		self.season = season
-		self.episodeName = data['episodeName']
+		self.episodeName = data['name']
 		self.number = int(data['number'])
 		try:
-			self.firstAired = datetime.strptime(data['firstAired'], '%Y-%m-%d').date()
+			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
 			pass
-		self.tvdbID = data['tvdbID']
+		self.tvdbID = data['id']
 		try:
 			self.overview = data['overview']
 		except:
@@ -191,7 +191,7 @@ class Episode(models.Model):
 	def compare_or_update(self, new_data):
 		self.episodeName = new_data['episodeName']
 		self.save()
-		if new_data['firstAired'] is not "":
+		if new_data['firstAired'] != "":
 			try:
 				self.firstAired = new_data['firstAired']
 				self.save()

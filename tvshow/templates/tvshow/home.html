@@ -11,7 +11,7 @@
       </div>
       {% endif %}
       <a href='/show/{{show.slug}}'>
-        <img class="card-img-top img-fluid" src="{{show.banner}}" alt="{{show.seriesName}}">
+        <img class="card-img-top img-fluid" src="{{show.banner}}" alt="{{show.seriesName}}"  width="300" height="900">
       </a>
       {% if show.is_watched %}
         <progress class="progress progress-striped progress-success" value="{{show.episode_watch_count}}" max="{{show.total_episodes}}"></progress>
