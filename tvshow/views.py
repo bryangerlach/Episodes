@@ -141,7 +141,7 @@ def search(request):
     return HttpResponseRedirect('/all')
 
 def update_all_continuing(request):
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'))#,Q(last_updated__lte=timezone.now()-timedelta(days=7)))
+    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
     for show in show_list:
         flag = show.update_show_data()
         show.last_updated = timezone.now()
