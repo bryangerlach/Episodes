@@ -163,3 +163,31 @@ def delete_show(request):
             except:
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
+
+def mark_all_unwatched(request):
+    if request.method == 'POST':
+        show_id = request.POST.get('show_id')
+        if show_id:
+            try:
+                show = Show.objects.get(id=show_id)
+                print(show.season_set.all())
+                for season in show.season_set.all():
+                    season.set_watched(False)
+                return HttpResponseRedirect('/')
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
+                
+
+def mark_all_watched(request):
+    if request.method == 'POST':
+        show_id = request.POST.get('show_id')
+        if show_id:
+            try:
+                show = Show.objects.get(id=show_id)
+                for season in show.season_set.all():
+                    season.set_watched(True)
+                return HttpResponseRedirect('/')
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')

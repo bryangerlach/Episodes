@@ -1,5 +1,5 @@
 from django.urls import re_path as url
-from .views import (home, add_search, add ,single_show, episode_swt, season_swt, search, update_show, update_show_rating, recommended, update_all_continuing, delete_show)
+from .views import (home, add_search, add ,single_show, episode_swt, season_swt, search, update_show, update_show_rating, recommended, update_all_continuing, delete_show, mark_all_unwatched, mark_all_watched)
 urlpatterns = [
     url(r'^(?P<view_type>|all||)$', home),
     url(r'^update_all_shows', update_all_continuing),
@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'^show/(?P<show_slug>[a-zA-Z0-9-]*$)', single_show),
     url(r'^episode_swt', episode_swt),
     url(r'^season_swt', season_swt),
+    url(r'^mark_all_unwatched', mark_all_unwatched),
+    url(r'^mark_all_watched', mark_all_watched),
 ]

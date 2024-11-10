@@ -131,6 +131,11 @@ class Season(models.Model):
 			self.status_watched = True
 			self.save()
 
+	def set_watched(self, watched):
+		self.episode_set.all().update(status_watched = watched)
+		self.status_watched = watched
+		self.save()
+
 	@property
 	def watch_count(self):
 		return Episode.objects.filter(Q(season=self),Q(status_watched=True),Q(firstAired__lte=datetime.now())).count()
