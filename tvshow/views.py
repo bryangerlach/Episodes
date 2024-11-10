@@ -66,7 +66,7 @@ def add(request):
                     season.add_season(show, i+1)
                     season_episodes_data = seasons_data[string]
                     for season_episode in season_episodes_data['episodes']:
-                        print(season_episode)
+                        #print(season_episode)
                         if season_episode['name']:
                             episode = Episode()
                             episode.add_episode(season, season_episode)
@@ -100,11 +100,15 @@ def single_show(request, show_slug):
 def episode_swt(request):
     if request.method == 'POST':
         episode_id = request.POST.get('episode_swt')
+        from_home = request.POST.get('home',None)
         episode = Episode.objects.get(id = episode_id)
         if episode:
             episode.wst()
             show = episode.season.show
-            return HttpResponseRedirect('/show/%s'%show.slug)
+            if from_home:
+                return HttpResponseRedirect('/')
+            else:
+                return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/all')
 
 def season_swt(request):
@@ -137,10 +141,12 @@ def search(request):
     return HttpResponseRedirect('/all')
 
 def update_all_continuing(request):
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
+    show_list = Show.objects.filter(Q(runningStatus='Continuing'))#,Q(last_updated__lte=timezone.now()-timedelta(days=7)))
     for show in show_list:
         flag = show.update_show_data()
         show.last_updated = timezone.now()
+        show_data = get_series_with_id(int(show.tvdbID))
+        show.network = show_data['originalNetwork']['name']
         show.save()
         if flag:
             messages.success(request, '%s has been updated.'%show.seriesName)

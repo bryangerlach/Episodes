@@ -7,7 +7,7 @@
     <div class="card-block text-xs-center">
       <a target="_blank" href="http://www.imdb.com/title/{{show.imbdID}}"><h3 class="card-title text-xs-center">{{show.seriesName}}<small class="text-muted"> ({{show.network}})</small></h3></a>
       {% for genre in show.get_genres %}
-        <span class="tag tag-pill tag-danger text-xs-center">{{genre}}</span>
+        <span class="tag tag-pill tag-danger text-xs-center">{{genre.name}}</span>
       {% endfor %}
       <br>
       <br>

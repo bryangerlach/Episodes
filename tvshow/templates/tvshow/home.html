@@ -4,10 +4,17 @@
 <div class="container-fluid col-xs-12">
 <div class="card-columns">
   {% for show in show_data %}
-  <div class="card">
+  <div class="card" style="max-width: 300px;">
       {% if flag %}
       <div class="card-header">
-        <p class="card-text text-xs-center">{{show.next_episode.season.number}}.{{show.next_episode.number}} <small>{{show.next_episode.episodeName}}</small></p>
+        <p class="card-text text-xs-center">
+          <form class='form-inline float-xs-right' action="/episode_swt" method="post">{% csrf_token %}
+            <small>{{show.next_episode.season.number}}.{{show.next_episode.number}}</small> {{show.next_episode.episodeName}}
+            <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
+            <input type="hidden" name="home" value="home">
+            <input type="checkbox" onclick="this.form.submit();">
+          </form>
+        </p>
       </div>
       {% endif %}
       <a href='/show/{{show.slug}}'>

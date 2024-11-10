@@ -42,5 +42,5 @@ def get_all_episodes(tvdbID,start_season):
 def download_image(tvdbID):
 	series = tvdb.get_series_artworks(tvdbID, 'en')
 	image = series['image']
-	print(image)
+	#print(image)
 	return image

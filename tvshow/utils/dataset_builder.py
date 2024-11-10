@@ -91,7 +91,7 @@ def get_shows_for_network(network):
 			pass
 
 for network in popular_networks:
-	print(network)
+	#print(network)
 	get_shows_for_network(network)
 	time.sleep(2)
 
@@ -100,5 +100,5 @@ tv_df.to_csv('data.csv', index=False)
 df = pd.read_csv('data.csv')
 df = pd.DataFrame(df)
 df2 = df.sort_values('indicator', ascending=False)
-print(df2.head())
+#print(df2.head())
 df2.to_csv('data.csv', index=False)

@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Q
 import json
-from .utils.tvdb_api_wrap import download_image,get_season_episode_list,get_all_episodes
+from .utils.tvdb_api_wrap import download_image,get_season_episode_list,get_all_episodes,get_series_with_id
 
 # Create your models here.
 
@@ -36,7 +36,7 @@ class Show(models.Model):
 		self.imbdID = data['id'] #doesn't exist
 		self.tvdbID = data['id']
 		#self.siteRating = data['score']
-		self.network = data['originalNetwork']
+		self.network = data['originalNetwork']['name']
 		self.runningStatus = runningStatus
 		self.genre_list = json.dumps(data['genres'])
 		self.last_updated = timezone.now()
@@ -80,13 +80,13 @@ class Show(models.Model):
 		current_season_oln_data = get_season_episode_list(tvdbID, current_season.number)
 		counter = 0
 		if current_season_oln_data:
-			for db_episode,oln_episode in zip(current_season_db_data, current_season_oln_data):
+			for db_episode,oln_episode in zip(current_season_db_data, current_season_oln_data['episodes']):
 				db_episode.compare_or_update(oln_episode)
 				counter+=1
 			if counter < len(current_season_oln_data):
-				for new_episode in current_season_oln_data[counter:]:
-					if new_episode['episodeName'] == "":
-						new_episode['episodeName'] = 'TBA'
+				for new_episode in current_season_oln_data['episodes'][counter:]:
+					if new_episode['name'] == "":
+						new_episode['name'] = 'TBA'
 					episode = Episode()
 					episode.add_episode(current_season,new_episode)
 					flag=True
@@ -100,7 +100,7 @@ class Show(models.Model):
 			season_episodes_data = new_seasons[string]
 			flag=True
 			for season_episode in season_episodes_data:
-				if season_episode['episodeName']:
+				if season_episode['name']:
 					episode = Episode()
 					episode.add_episode(season, season_episode)
 		return flag
@@ -189,11 +189,11 @@ class Episode(models.Model):
 			self.season.save()
 
 	def compare_or_update(self, new_data):
-		self.episodeName = new_data['episodeName']
+		self.episodeName = new_data['name']
 		self.save()
-		if new_data['firstAired'] != "":
+		if new_data['aired'] != "":
 			try:
-				self.firstAired = new_data['firstAired']
+				self.firstAired = new_data['aired']
 				self.save()
 			except:
 				pass
