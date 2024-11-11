@@ -13,10 +13,6 @@ from random import shuffle
 # Create your views here.
 def home(request, view_type):
     show_data = Show.objects.all().order_by('-modified')
-    for show in show_data:
-        if show.imdbID == show.tvdbID:
-            show.update_imdb()
-            show.save()
     if view_type == 'all':
         flag = False
     elif view_type == 'watch_later':

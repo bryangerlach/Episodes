@@ -112,6 +112,7 @@ class Show(models.Model):
 		return flag
 	
 	def update_imdb(self):
+		#this was used to update data after a database update. no longer needed?
 		online_show_data = get_series_with_id(self.tvdbID)
 		for i in range(len(online_show_data['remoteIds'])):
 			if online_show_data['remoteIds'][i]['sourceName'] == 'IMDB':
