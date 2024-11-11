@@ -19,6 +19,11 @@
       <p class="card-text">
         {{show.overview}}
       </p>
+      {% if not show.watch_later %}
+        <button class="btn btn-danger" data-toggle="modal" data-target=".watch-later">Watch Later</button>
+      {% else %}
+      <button class="btn btn-danger" data-toggle="modal" data-target=".watch-now">Start Watching</button>
+      {% endif %}
       {% if show.is_watched %}
       <button class="btn btn-danger" data-toggle="modal" data-target=".mark-all-unwatched">Mark All Unwatched</button>
       {% else %}
@@ -164,6 +169,52 @@
       <div class="modal-footer text-xs-center">
         <button type="button" class="btn btn-success" data-dismiss="modal">Cancel</button>
         <button type="submit" class="btn btn-danger">Mark Watched</button>
+      </div>
+      </form>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade watch-later" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-xs-center">
+        <div class="modal-header">
+          <h4 class="modal-title" id="myModalLabel">Show will be watched later</h4>
+        </div>
+        <form action="/later" method="post">{% csrf_token %}
+        <div class="modal-body">
+            <p>
+              {{show.seriesName}} will be sent to Watch Later.
+            </p>
+            <input type="hidden" value={{show.id}} name='show_id'>
+        </div>
+      <div class="modal-footer text-xs-center">
+        <button type="button" class="btn btn-success" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Watch Later</button>
+      </div>
+      </form>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade watch-now" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-xs-center">
+        <div class="modal-header">
+          <h4 class="modal-title" id="myModalLabel">Start watching</h4>
+        </div>
+        <form action="/now" method="post">{% csrf_token %}
+        <div class="modal-body">
+            <p>
+              {{show.seriesName}} will be sent to Episodes.
+            </p>
+            <input type="hidden" value={{show.id}} name='show_id'>
+        </div>
+      <div class="modal-footer text-xs-center">
+        <button type="button" class="btn btn-success" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Start Watching</button>
       </div>
       </form>
     </div>

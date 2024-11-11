@@ -15,12 +15,17 @@ def home(request, view_type):
     if view_type == 'all':
         show_data = Show.objects.all().order_by('-modified')
         flag = False
+    elif view_type == 'watch_later':
+        show_data = Show.objects.all().order_by('-modified')
+        data = [show for show in show_data if show.watch_later]
+        show_data = data
+        flag = False
     else:
         show_data = Show.objects.all().order_by('-modified')
-        data = [show for show in show_data if not show.is_watched]
+        data = [show for show in show_data if not show.is_watched and not show.watch_later]
         show_data = data
         flag = True
-    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':timezone.now()})
+    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'later':later, 'time':timezone.now()})
 
 def update_show(request):
     if request.method == 'POST':
@@ -189,6 +194,30 @@ def mark_all_watched(request):
                     print(season.number)
                     season.set_watched(True)
                 return HttpResponseRedirect('/')
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
+
+def later(request):
+    if request.method == 'POST':
+        show_id = request.POST.get('show_id')
+        if show_id:
+            try:
+                show = Show.objects.get(id=show_id)
+                show.watch_later = True
+                show.save()
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
+
+def now(request):
+    if request.method == 'POST':
+        show_id = request.POST.get('show_id')
+        if show_id:
+            try:
+                show = Show.objects.get(id=show_id)
+                show.watch_later = False
+                show.save()
             except:
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
