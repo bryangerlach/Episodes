@@ -25,6 +25,7 @@ class Show(models.Model):
 	genre_list = models.TextField(null=True, blank=True)
 	last_updated = models.DateTimeField(null=True, blank=True)
 	watch_later = models.BooleanField(default = False)
+	stopped_watching = models.BooleanField(default = False)
 
 	def __str__(self):
 		return self.seriesName
@@ -42,6 +43,7 @@ class Show(models.Model):
 		self.genre_list = json.dumps(data['genres'])
 		self.last_updated = timezone.now()
 		self.watch_later = False
+		self.stopped_watching = False
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:

@@ -20,12 +20,17 @@ def home(request, view_type):
         data = [show for show in show_data if show.watch_later]
         show_data = data
         flag = False
+    elif view_type == 'stopped_watching':
+        show_data = Show.objects.all().order_by('-modified')
+        data = [show for show in show_data if show.stopped_watching]
+        show_data = data
+        flag = False
     else:
         show_data = Show.objects.all().order_by('-modified')
-        data = [show for show in show_data if not show.is_watched and not show.watch_later]
+        data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching]
         show_data = data
         flag = True
-    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'later':later, 'time':timezone.now()})
+    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':timezone.now()})
 
 def update_show(request):
     if request.method == 'POST':
@@ -217,6 +222,19 @@ def now(request):
             try:
                 show = Show.objects.get(id=show_id)
                 show.watch_later = False
+                show.stopped_watching = False
+                show.save()
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
+
+def stop(request):
+    if request.method == 'POST':
+        show_id = request.POST.get('show_id')
+        if show_id:
+            try:
+                show = Show.objects.get(id=show_id)
+                show.stopped_watching = True
                 show.save()
             except:
                 return HttpResponseRedirect('/')
