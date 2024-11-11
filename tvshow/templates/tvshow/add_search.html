@@ -18,7 +18,7 @@
     <div class="card-block">
       <h4 class="card-title">{{show.seriesName}}</h4>
       <p class="card-text">{{show.overview}}</p>
-      <p class="card-text"><small class="text-muted">First aired {{show.firstAired}}</small></p>
+      <p class="card-text"><small class="text-muted">First aired {{show.first_air_time}}</small></p>
     </div>
     <div class="card-block">
       <form class='form-inline' action="/add" method="post">{% csrf_token %}

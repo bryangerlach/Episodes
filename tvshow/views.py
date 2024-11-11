@@ -20,7 +20,7 @@ def home(request, view_type):
         data = [show for show in show_data if not show.is_watched]
         show_data = data
         flag = True
-    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag})
+    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':timezone.now()})
 
 def update_show(request):
     if request.method == 'POST':
@@ -186,6 +186,7 @@ def mark_all_watched(request):
             try:
                 show = Show.objects.get(id=show_id)
                 for season in show.season_set.all():
+                    print(season.number)
                     season.set_watched(True)
                 return HttpResponseRedirect('/')
             except:

@@ -41,7 +41,7 @@ class Show(models.Model):
 		self.genre_list = json.dumps(data['genres'])
 		self.last_updated = timezone.now()
 		try:
-			self.firstAired = datetime.strptime(data['firstAired'], '%Y-%m-%d').date()
+			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
 			pass
 		self.save()
@@ -127,22 +127,30 @@ class Season(models.Model):
 			self.status_watched = False
 			self.save()
 		else:
-			self.episode_set.all().update(status_watched = True)
+			episodes = self.episode_set.all()
+			for episode in episodes:
+				if episode.firstAired < timezone.now().date():
+					episode.status_watched = True
+					episode.save()
 			self.status_watched = True
 			self.save()
 
 	def set_watched(self, watched):
-		self.episode_set.all().update(status_watched = watched)
+		episodes = self.episode_set.all()
+		for episode in episodes:
+			if episode.firstAired < timezone.now().date() or not watched:
+				episode.status_watched = watched
+				episode.save()
 		self.status_watched = watched
 		self.save()
 
 	@property
 	def watch_count(self):
-		return Episode.objects.filter(Q(season=self),Q(status_watched=True),Q(firstAired__lte=datetime.now())).count()
+		return Episode.objects.filter(Q(season=self),Q(status_watched=True),Q(firstAired__lte=timezone.now())).count()
 
 	@property
 	def episode_count(self):
-		return Episode.objects.filter(Q(season=self), Q(firstAired__lte=datetime.now())).count()
+		return Episode.objects.filter(Q(season=self), Q(firstAired__lte=timezone.now())).count()
 
 	@property
 	def status_watched_check(self):
