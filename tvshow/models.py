@@ -13,7 +13,7 @@ class Show(models.Model):
 	seriesName = models.CharField(max_length=50)
 	overview = models.TextField()
 	banner = models.CharField(max_length=150, null=True, blank=True)
-	imbdID = models.CharField(max_length=50, null=True, blank=True)
+	imdbID = models.CharField(max_length=50, null=True, blank=True)
 	status_watched = models.BooleanField(default=False)
 	slug = models.SlugField(null = True, blank = True)
 	runningStatus = models.CharField(max_length=50)
@@ -35,7 +35,9 @@ class Show(models.Model):
 		self.slug = slugify(self.seriesName)
 		self.overview = data['overview']
 		self.banner = download_image(data['id'])
-		self.imbdID = data['id'] #doesn't exist
+		for i in range(len(data['remoteIds'])):
+			if data['remoteIds'][i]['sourceName'] == 'IMDB':
+				self.imdbID = data['remoteIds'][i]['id']
 		self.tvdbID = data['id']
 		#self.siteRating = data['score']
 		self.network = data['originalNetwork']['name']
@@ -108,6 +110,12 @@ class Show(models.Model):
 					episode = Episode()
 					episode.add_episode(season, season_episode)
 		return flag
+	
+	def update_imdb(self):
+		online_show_data = get_series_with_id(self.tvdbID)
+		for i in range(len(online_show_data['remoteIds'])):
+			if online_show_data['remoteIds'][i]['sourceName'] == 'IMDB':
+				self.imdbID = online_show_data['remoteIds'][i]['id']
 
 class Season(models.Model):
 	show = models.ForeignKey(Show, on_delete=models.CASCADE)

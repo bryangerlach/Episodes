@@ -5,7 +5,7 @@
   <div class="card text-xs-center">
     <img class="card-img-top img-fluid mx-auto" src="{{show.banner}}" alt="Card image cap" width="300" height="900">
     <div class="card-block text-xs-center">
-      <a target="_blank" href="https://imdb.com/find/?q={{show.seriesName}}"><h3 class="card-title text-xs-center">{{show.seriesName}}<small class="text-muted"> ({{show.network}})</small></h3></a>
+      <a target="_blank" href="https://www.imdb.com/title/{{show.imdbID}}"><h3 class="card-title text-xs-center">{{show.seriesName}}<small class="text-muted"> ({{show.network}})</small></h3></a>
       {% for genre in show.get_genres %}
         <span class="tag tag-pill tag-danger text-xs-center">{{genre.name}}</span>
       {% endfor %}

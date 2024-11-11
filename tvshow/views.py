@@ -12,21 +12,22 @@ from random import shuffle
 
 # Create your views here.
 def home(request, view_type):
+    show_data = Show.objects.all().order_by('-modified')
+    for show in show_data:
+        if show.imdbID == show.tvdbID:
+            show.update_imdb()
+            show.save()
     if view_type == 'all':
-        show_data = Show.objects.all().order_by('-modified')
         flag = False
     elif view_type == 'watch_later':
-        show_data = Show.objects.all().order_by('-modified')
         data = [show for show in show_data if show.watch_later]
         show_data = data
         flag = False
     elif view_type == 'stopped_watching':
-        show_data = Show.objects.all().order_by('-modified')
         data = [show for show in show_data if show.stopped_watching]
         show_data = data
         flag = False
     else:
-        show_data = Show.objects.all().order_by('-modified')
         data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching]
         show_data = data
         flag = True
