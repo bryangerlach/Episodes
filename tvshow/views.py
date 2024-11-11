@@ -180,7 +180,6 @@ def mark_all_unwatched(request):
         if show_id:
             try:
                 show = Show.objects.get(id=show_id)
-                print(show.season_set.all())
                 for season in show.season_set.all():
                     season.set_watched(False)
                 return HttpResponseRedirect('/')
@@ -196,7 +195,6 @@ def mark_all_watched(request):
             try:
                 show = Show.objects.get(id=show_id)
                 for season in show.season_set.all():
-                    print(season.number)
                     season.set_watched(True)
                 return HttpResponseRedirect('/')
             except:
