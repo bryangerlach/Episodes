@@ -6,8 +6,6 @@ from django.db.models import Q
 import json
 from .utils.tvdb_api_wrap import download_image,get_season_episode_list,get_all_episodes,get_series_with_id
 
-# Create your models here.
-
 class Show(models.Model):
 	tvdbID = models.CharField(max_length=50)
 	seriesName = models.CharField(max_length=50)

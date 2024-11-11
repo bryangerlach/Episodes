@@ -1,7 +1,7 @@
 from django.urls import re_path as url
 from .views import (home, add_search, add ,single_show, episode_swt, season_swt, search, update_show, update_show_rating, recommended, update_all_continuing, delete_show, mark_all_unwatched, mark_all_watched, later, now, stop)
 urlpatterns = [
-    url(r'^(?P<view_type>|all|watch_later|stopped_watching||)$', home),
+    url(r'^(?P<view_type>|all|watch_later|stopped_watching|upcoming||)$', home),
     url(r'^update_all_shows', update_all_continuing),
     url(r'^update_show', update_show),
     url(r'^delete_show', delete_show),

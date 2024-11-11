@@ -12,6 +12,7 @@ from random import shuffle
 
 # Create your views here.
 def home(request, view_type):
+    time = timezone.now()
     show_data = Show.objects.all().order_by('-modified')
     if view_type == 'all':
         flag = False
@@ -23,11 +24,15 @@ def home(request, view_type):
         data = [show for show in show_data if show.stopped_watching]
         show_data = data
         flag = False
+    elif view_type == 'upcoming':
+        data = [show for show in show_data if show.next_episode and show.next_episode.firstAired > time.date()]
+        show_data = data
+        flag = True
     else:
         data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching]
         show_data = data
         flag = True
-    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':timezone.now()})
+    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
 
 def update_show(request):
     if request.method == 'POST':

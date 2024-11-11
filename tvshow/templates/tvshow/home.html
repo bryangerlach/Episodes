@@ -11,6 +11,9 @@
             {% if show.next_episode.firstAired == time.date %}
             *
             {% endif %}
+            {% if view_type == 'upcoming' %}
+            {{show.next_episode.firstAired}}<br>
+            {% endif %}
             {{show.next_episode.season.number}}.{{show.next_episode.number}} <small>{{show.next_episode.episodeName}}</small>
             <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
             <input type="hidden" name="home" value="home">
