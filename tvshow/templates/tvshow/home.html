@@ -1,8 +1,7 @@
 {% extends "tvshow/header.html" %}
 {% block content %}
 <div class="container-fluid col-xs-12">
-<div class="card-group">
-  <div class="col-md-6">
+<div class="card-columns">
   {% for show in show_data %}
   <div class="card" style="max-width: 200px;">
       {% if flag %}
@@ -33,7 +32,6 @@
       {% endif %}
   </div>
   {% endfor %}
-</div>
 </div>
 </div>
 
