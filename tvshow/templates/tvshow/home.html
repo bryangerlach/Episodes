@@ -1,71 +1,76 @@
 {% extends "tvshow/header.html" %}
 {% block content %}
+<div class="container">
   {% for show in show_data %}
-  <div class="card mb-3" style="max-height: 540px;">
+
+  <div class="card mb-1" style="max-height: 540px;">
     <div class="row g-0">
       <div class="col-xs-4">
-      <a href='/show/{{show.slug}}'>
-        <img class="img-fluid" src="{{show.banner}}" alt="{{show.seriesName}}"  width="100" height="300">
-      </a>
-      {% if show.is_watched %}
-        <progress class="progress progress-striped progress-success" value="{{show.episode_watch_count}}" max="{{show.total_episodes}}"></progress>
-      {% else %}
-        <progress class="progress progress-striped" value="{{show.episode_watch_count}}" max="{{show.total_episodes}}"></progress>
-      {% endif %}
-    </div>
-    {% if flag %}
-        <div class="col-md-8">
-      <!-- <div class="card-header"> -->
-        <div class="card-body">
-          <form class='form-inline float-xs-left' action="/episode_swt" method="post">{% csrf_token %}
-            <div class="card-title">
-            {% if show.next_episode.firstAired == time.date %}
-            *
-            {% endif %}
-            {% if view_type == 'upcoming' %}
-            {{show.next_episode.firstAired}}<br>
-            {% endif %}
-            
-            {{show.seriesName}}
-            
-            </div>
-            <p class="card-text"><small class="text-body-secondary">S{{show.next_episode.season.number}} | E{{show.next_episode.number}} </small></p>
-            <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small>
-              <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
-              <input type="hidden" name="home" value="home">
-              <input type="checkbox" onclick="this.form.submit();">
-            </p>
-            
-          </form>
+        <a href='/show/{{show.slug}}'>
+          <img class="img-fluid" src="{{show.banner}}" alt="{{show.seriesName}}" width="100" height="300">
+        </a>
+        {% if show.is_watched %}
+        <progress class="progress progress-striped progress-success" value="{{show.episode_watch_count}}"
+          max="{{show.total_episodes}}"></progress>
+        {% else %}
+        <progress class="progress progress-striped" value="{{show.episode_watch_count}}"
+          max="{{show.total_episodes}}"></progress>
+        {% endif %}
+      </div>
+      {% if flag %}
+      <div class="col-md-8">
+        <!-- <div class="card-header"> -->
+        <div class="card-title">
+          {% if show.next_episode.firstAired == time.date %}
+          *
+          {% endif %}
+          {% if view_type == 'upcoming' %}
+          {{show.next_episode.firstAired}}<br>
+          {% endif %}
+
+          {{show.seriesName}}
+
         </div>
-      <!-- </div> -->
+        <p class="card-text"><small class="text-body-secondary">S{{show.next_episode.season.number}} |
+            E{{show.next_episode.number}} </small></p>
+        <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small>
+        <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
+          <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
+          <input type="hidden" name="home" value="home">
+          <input type="checkbox" onclick="this.form.submit();">
+        </form>
+        </p>
+
+
+        <!-- </div> -->
       </div>
       {% endif %}
-      
+
     </div>
-  {% endfor %}
   </div>
+
+  {% endfor %}
 </div>
 
 {% if messages %}
 <div class="modal fade" id="messages" tabindex="-1" role="dialog" aria-labelledby="messagesLabel" aria-hidden="true">
-<div class="modal-dialog" role="document">
-  <div class="modal-content">
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-      <h4 class="modal-title text-xs-center" id="myModalLabel">Updates</h4>
-    </div>
-    <div class="modal-body">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title text-xs-center" id="myModalLabel">Updates</h4>
+      </div>
+      <div class="modal-body">
         {% for message in messages %}
         <div class="alert alert-success" role="alert">
           {{message}}
         </div>
         {% endfor %}
+      </div>
     </div>
   </div>
-</div>
 </div>
 {% endif %}
 {% endblock %}
