@@ -2,24 +2,15 @@
 {% block content %}
 <div class="container">
   {% for show in show_data %}
-
-  <div class="card mb-1" style="max-height: 540px;">
-    <div class="row g-0">
-      <div class="col-xs-4">
+  <div class="card mb-2" style="max-width: 540px;">
+    <div class="row g-0 align-items-start">
+      <div class="col-4 col-sm-3">
         <a href='/show/{{show.slug}}'>
-          <img class="img-fluid" src="{{show.banner}}" alt="{{show.seriesName}}" width="100" height="300">
+          <img class="img-fluid rounded-start" src="{{show.banner}}" alt="{{show.seriesName}}" width="100px">
         </a>
-        {% if show.is_watched %}
-        <progress class="progress progress-striped progress-success" value="{{show.episode_watch_count}}"
-          max="{{show.total_episodes}}"></progress>
-        {% else %}
-        <progress class="progress progress-striped" value="{{show.episode_watch_count}}"
-          max="{{show.total_episodes}}"></progress>
-        {% endif %}
       </div>
       {% if flag %}
-      <div class="col-md-8">
-        <!-- <div class="card-header"> -->
+      <div class="col-6 col-md-3">
         <div class="card-title">
           {% if show.next_episode.firstAired == time.date %}
           *
@@ -33,16 +24,33 @@
         </div>
         <p class="card-text"><small class="text-body-secondary">S{{show.next_episode.season.number}} |
             E{{show.next_episode.number}} </small></p>
-        <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small>
+        <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small></p>
+      </div>
+      <div class="col-1 col-md-1 align-self-center">
         <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
           <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
           <input type="hidden" name="home" value="home">
           <input type="checkbox" onclick="this.form.submit();">
         </form>
-        </p>
-
-
-        <!-- </div> -->
+      </div>
+      {% if show.is_watched %}
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped bg-success" role="progressbar"
+          style="width: {{ show.watched_pct }}%;" aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0"
+          aria-valuemax="{{show.total_episodes}}"></div>
+      </div>
+      {% else %}
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ show.watched_pct }}%;"
+          aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0" aria-valuemax="{{show.total_episodes}}"></div>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="col-8 col-md-3">
+        <div class="card-title">
+          {{show.seriesName}}
+          <p class="card-text"><small class="text-body-secondary">{{show.overview}}</small></p>
+        </div>
       </div>
       {% endif %}
 

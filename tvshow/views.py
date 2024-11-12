@@ -31,6 +31,8 @@ def home(request, view_type):
         flag = True
     else:
         data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching]
+        for show in data:
+            show.watched_pct = show.episode_watch_count / show.total_episodes * 100
         show_data = data
         flag = True
     return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
@@ -108,7 +110,8 @@ def add_search(request):
 def single_show(request, show_slug):
     show = Show.objects.get(slug__iexact = show_slug)
     next_episode = show.next_episode
-    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode})
+    watched_pct = show.episode_watch_count / show.total_episodes * 100
+    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct })
 
 def episode_swt(request):
     if request.method == 'POST':

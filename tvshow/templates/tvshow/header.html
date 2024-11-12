@@ -10,56 +10,69 @@
 	{% block title_modify %}
 	{% endblock %}
 	<title>Episodes</title>
-	<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" >
+	<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}">
 	<!-- Bootstrap CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 
 <body>
-	<nav class="navbar navbar-fixed-top navbar-dark bg-primary">
-		<button class="float-xs-right navbar-toggler hidden-sm-up" type="button" data-toggle="collapse" data-target="#exCollapsingNavbar2" aria-controls="exCollapsingNavbar2" aria-expanded="false" aria-label="Toggle navigation"></button>
-		<a class="navbar-brand" href="/">Episodes</a>
-		<div class="collapse navbar-toggleable-xs" id="exCollapsingNavbar2">
-			<ul class="nav navbar-nav">
-				<li class="nav-item">
-					<a class="nav-link" href="/all">All</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/upcoming">Upcoming</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/add_search">Add</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/update_all_shows">Update</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/watch_later">Watch Later</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="/stopped_watching">Stopped Watching</a>
-				</li>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+		<div class="container-fluid">
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler01"
+				aria-controls="navbarToggler01" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<!-- <a class="navbar-brand" href="/">Episodes</a> -->
+			<div class="collapse navbar-collapse" id="navbarToggler01">
+				<a class="navbar-brand" href="/">Episodes</a>
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					<li class="nav-item">
+						<a class="nav-link" href="/all">All</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/upcoming">Upcoming</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/add_search">Add</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/update_all_shows">Update</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/watch_later">Watch Later</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/stopped_watching">Stopped Watching</a>
+					</li>
 				</ul>
-				<form class="form-inline float-xs-right" action="{% url 'tvshow:search' %}">
-					<input class="form-control" name='query' type="text" placeholder="Search">
+				<form class="d-flex" action="{% url 'tvshow:search' %}">
+					<input class="form-control me-2" name='query' type="text" placeholder="Search">
 					<button class="btn btn-success" type="submit">Search</button>
 				</form>
 			</div>
-		</nav>
-		<br>
-		<br>
-		<br>
-		{% block content %}
-		{% endblock %}
-		<!-- jQuery first, then Tether, then Bootstrap JS. -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js" integrity="sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js" integrity="sha384-Plbmg8JY28KFelvJVai01l8WyZzrYWG825m+cZ0eDDS1f7d/js6ikvy1+X+guPIB" crossorigin="anonymous"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js" integrity="sha384-BLiI7JTZm+JWlgKa0M0kGRpJbF2J8q+qreVrKBC47e3K6BW78kGLrCkeRX6I9RoK" crossorigin="anonymous"></script>
-		<script type="text/javascript">
+		</div>
+	</nav>
+	<br>
+	<br>
+	<br>
+	{% block content %}
+	{% endblock %}
+	<!-- jQuery first, then Tether, then Bootstrap JS. -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"
+		integrity="sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"
+		integrity="sha384-Plbmg8JY28KFelvJVai01l8WyZzrYWG825m+cZ0eDDS1f7d/js6ikvy1+X+guPIB"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+		crossorigin="anonymous"></script>
+	<script type="text/javascript">
 		$(document).ready(function () {
 			$('#messages').modal('show');
 		});
-		</script>
-	</body>
+	</script>
+</body>
 
-	</html>
+</html>
