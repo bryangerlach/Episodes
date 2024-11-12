@@ -26,6 +26,7 @@ def home(request, view_type):
         flag = False
     elif view_type == 'upcoming':
         data = [show for show in show_data if show.next_episode and (show.next_episode.firstAired and show.next_episode.firstAired > time.date())]
+        data = sorted(data, key=lambda x: x.next_episode.firstAired)
         show_data = data
         flag = True
     else:
