@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
 	<!-- Required meta tags always come first -->
@@ -50,6 +50,9 @@
 					<input class="form-control me-2" name='query' type="text" placeholder="Search">
 					<button class="btn btn-success" type="submit">Search</button>
 				</form>
+				<Div class="col-auto">
+					<button class="btn btn-dark shadow" id="btnSwitch">Light/Dark</button>
+				</Div>
 			</div>
 		</div>
 	</nav>
@@ -72,6 +75,39 @@
 		$(document).ready(function () {
 			$('#messages').modal('show');
 		});
+		let myTheme = getCookie("theme");
+		if (myTheme == "") {
+			myTheme = "dark";
+		}
+		document.documentElement.setAttribute('data-bs-theme', myTheme)
+		document.getElementById('btnSwitch').addEventListener('click', () => {
+			if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
+				document.documentElement.setAttribute('data-bs-theme', 'light')
+				setCookie("theme","light",365);
+			}
+			else {
+				document.documentElement.setAttribute('data-bs-theme', 'dark')
+				setCookie("theme","dark",365);
+			}
+		})
+		// Set a cookie
+		function setCookie(name, value, days) {
+			const expires = new Date();
+			expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+			document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+		}
+
+		// Get a cookie
+		function getCookie(name) {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = cookies[i].trim();
+				if (cookie.startsWith(name + '=')) {
+					return cookie.substring(name.length + 1);
+				}
+			}
+			return null;
+		}
 	</script>
 </body>
 
