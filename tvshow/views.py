@@ -6,13 +6,12 @@ from .utils.recommender import get_recommendations
 from .models import Show,Season,Episode
 from django.db.models import Q
 from django.contrib import messages
-from datetime import timedelta
-from django.utils import timezone
+from datetime import timedelta, datetime
 from random import shuffle
 
 # Create your views here.
 def home(request, view_type):
-    time = timezone.now()
+    time = datetime.now()
     show_data = Show.objects.all().order_by('-modified')
     if view_type == 'all':
         flag = False
@@ -43,7 +42,7 @@ def update_show(request):
         show = Show.objects.get(id=show_id)
         if show:
             show.update_show_data()
-            show.last_updated = timezone.now()
+            show.last_updated = datetime.now()
             show.save()
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
@@ -157,10 +156,10 @@ def search(request):
     return HttpResponseRedirect('/all')
 
 def update_all_continuing(request):
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
+    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=datetime.now()-timedelta(days=7)))
     for show in show_list:
         flag = show.update_show_data()
-        show.last_updated = timezone.now()
+        show.last_updated = datetime.now()
         show_data = get_series_with_id(int(show.tvdbID))
         show.network = show_data['originalNetwork']['name']
         show.save()

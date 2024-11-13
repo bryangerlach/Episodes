@@ -12,17 +12,19 @@
       {% if flag %}
       <div class="col-6 col-md-3">
         <div class="card-title">
-          {% if show.next_episode.firstAired == time.date %}
-          *
-          {% endif %}
+          
+          
           {% if view_type == 'upcoming' %}
           {{show.next_episode.firstAired}}<br>
           {% endif %}
-
           {{show.seriesName}}
 
         </div>
-        <p class="card-text"><small class="text-body-secondary">S{{show.next_episode.season.number}} |
+        <p class="card-text">
+          {% if show.next_episode.firstAired == time.date %}
+          <span class="badge bg-warning text-dark">New</span> 
+          {% endif %}
+          <small class="text-body-secondary">S{{show.next_episode.season.number}} |
             E{{show.next_episode.number}} </small></p>
         <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small></p>
       </div>

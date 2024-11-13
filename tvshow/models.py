@@ -1,6 +1,5 @@
 from django.db import models
 from datetime import datetime
-from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Q
 import json
@@ -41,7 +40,7 @@ class Show(models.Model):
 		self.network = data['originalNetwork']['name']
 		self.runningStatus = runningStatus
 		self.genre_list = json.dumps(data['genres'])
-		self.last_updated = timezone.now()
+		self.last_updated = datetime.now()
 		self.watch_later = False
 		self.stopped_watching = False
 		try:
@@ -140,7 +139,7 @@ class Season(models.Model):
 		else:
 			episodes = self.episode_set.all()
 			for episode in episodes:
-				if episode.firstAired < timezone.now().date():
+				if episode.firstAired < datetime.now().date():
 					episode.status_watched = True
 					episode.save()
 			self.status_watched = True
@@ -149,7 +148,7 @@ class Season(models.Model):
 	def set_watched(self, watched):
 		episodes = self.episode_set.all()
 		for episode in episodes:
-			if episode.firstAired < timezone.now().date() or not watched:
+			if episode.firstAired < datetime.now().date() or not watched:
 				episode.status_watched = watched
 				episode.save()
 		self.status_watched = watched
@@ -157,11 +156,11 @@ class Season(models.Model):
 
 	@property
 	def watch_count(self):
-		return Episode.objects.filter(Q(season=self),Q(status_watched=True),Q(firstAired__lte=timezone.now())).count()
+		return Episode.objects.filter(Q(season=self),Q(status_watched=True),Q(firstAired__lte=datetime.now())).count()
 
 	@property
 	def episode_count(self):
-		return Episode.objects.filter(Q(season=self), Q(firstAired__lte=timezone.now())).count()
+		return Episode.objects.filter(Q(season=self), Q(firstAired__lte=datetime.now())).count()
 
 	@property
 	def status_watched_check(self):

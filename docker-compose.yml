@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    ports:
+      - "3080:3080"
+    volumes:
+      - .:/app
+    command: python manage.py runserver 0.0.0.0:3080
