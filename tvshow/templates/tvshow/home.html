@@ -15,7 +15,7 @@
           
           
           {% if view_type == 'upcoming' %}
-          {{show.next_episode.firstAired}}<br>
+          {{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}<br>
           {% endif %}
           {{show.seriesName}}
 
