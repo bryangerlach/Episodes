@@ -35,9 +35,6 @@
         <ul class="list-group">
           <li class="list-group-item list-group-item-success">Next to Watch</li>
           <li class="list-group-item">
-            {{next_episode.number}}. <a data-bs-toggle="collapse" href="#collapseE{{next_episode.number}}"
-              aria-expanded="false" aria-controls="collapseE{{next_episode.number}}">{{next_episode.episodeName}}</a>
-            <small>{{next_episode.firstAired}}</small>
             <form class='form-inline float-xs-right' action="/episode_swt" method="post">{% csrf_token %}
               <input type="hidden" name="episode_swt" value="{{next_episode.id}}">
               {% if next_episode.status_watched == True %}
@@ -45,6 +42,9 @@
               {% else %}
               <input type="checkbox" onclick="this.form.submit();">
               {% endif %}
+              {{next_episode.number}}. <a data-bs-toggle="collapse" href="#collapseE{{next_episode.number}}"
+              aria-expanded="false" aria-controls="collapseE{{next_episode.number}}">{{next_episode.episodeName}}</a>
+            <small>{{next_episode.firstAired}}</small><br>
             </form>
           </li>
           <div class="collapse" id="collapseE{{next_episode.number}}">
