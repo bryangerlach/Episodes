@@ -1,0 +1,27 @@
+{% extends "tvshow/header.html" %}
+{% block content %}
+<div class="container">
+  {% for episode in episode_data %}
+  <div class="card mb-2" style="max-width: 540px;">
+    <div class="row g-0 align-items-start">
+      <div class="col-4 col-sm-3">
+        <a href='/show/{{episode.season.show.slug}}'>
+          <img class="img-fluid rounded-start" src="{{episode.season.show.banner}}" alt="{{episode.season.show.seriesName}}" width="100px">
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card-title">
+          {{episode.season.show.seriesName}}
+
+        </div>
+        <p class="card-text">
+          <small class="text-body-secondary">S{{episode.season.number}} |
+            E{{episode.number}} </small>
+        <small class="text-body-secondary">{{episode.episodeName}}</small></p>
+        <p class = "card-text"><small class="text-body-secondary">Watched: <br>{{episode.date_watched}}</small></p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

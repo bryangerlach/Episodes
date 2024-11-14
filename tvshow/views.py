@@ -83,6 +83,12 @@ def home(request, view_type):
     return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
 
 @login_required(login_url='/login')
+def history(request):
+    episode_data_full = Episode.objects.filter(status_watched=True).order_by('-date_watched')
+    episode_data = episode_data_full[:25]
+    return render(request, 'tvshow/history.html', {'episode_data': episode_data})
+
+@login_required(login_url='/login')
 def update_show(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_info')
