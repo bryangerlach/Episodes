@@ -15,7 +15,6 @@
 {% if context.Flag %}
 <div class="container">
     {% for show in context.show_datalist %}
-    {% if show.image %}
     <div class="card" style="max-width: 300px;">
       <img class="card-img-top" src="{{show.image}}" alt="Card image cap" width="300px">
       <div class="card-body">
@@ -29,7 +28,6 @@
         </form>
       </div>
     </div>
-    {% endif %}
     {% endfor %}
 </div>
 {% endif %}

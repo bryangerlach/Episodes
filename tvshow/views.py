@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, download_image
 from .utils.recommender import get_recommendations
@@ -8,8 +8,54 @@ from django.db.models import Q
 from django.contrib import messages
 from datetime import timedelta, datetime
 from random import shuffle
+from django.contrib import auth
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate
 
-# Create your views here.
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            auth.login(request, user)
+            return HttpResponseRedirect('/')
+        else:
+            # Handle failed login attempt (e.g., display error message)
+            pass
+    return render(request, 'tvshow/login.html')
+
+def user_action(request):
+    action = request.GET.get('action', '')
+    if action == 'register':
+        return user_register(request)
+    elif action == 'logout':
+        return user_logout(request)
+    else:
+        return
+    
+def user_register(request):
+    result = {
+        'code':0,
+        'msg':''
+    }
+    if request.method == 'GET':
+        return render(request, 'tvshow/register.html')
+    
+    username = request.POST.get('username', '')
+    password1 = request.POST.get('password', '')
+
+    user = User.objects.create_user(username,None,password1)
+    result['msg'] = str(user)
+    result['code'] = 1
+    return render(request, 'tvshow/login.html')
+
+def user_logout(request):
+    auth.logout(request)
+    return HttpResponseRedirect('/login')
+
+@login_required(login_url='/login')
 def home(request, view_type):
     time = datetime.now()
     show_data = Show.objects.all().order_by('-modified')
@@ -36,6 +82,7 @@ def home(request, view_type):
         flag = True
     return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
 
+@login_required(login_url='/login')
 def update_show(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_info')
@@ -47,6 +94,7 @@ def update_show(request):
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def update_show_rating(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -58,6 +106,7 @@ def update_show_rating(request):
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def add(request):
     if request.method == 'POST':
         slug = ''
@@ -87,7 +136,7 @@ def add(request):
         return HttpResponseRedirect('/show/%s'%slug)
     return HttpResponseRedirect('/all')
 
-
+@login_required(login_url='/login')
 def add_search(request):
     context = {}
     context['Flag'] = False
@@ -100,18 +149,20 @@ def add_search(request):
                 try:
                     show['image'] = download_image(show['tvdb_id'])
                 except:
-                    pass
+                    show['image'] = 'http://twokeyfun.com/noimage.jpg'
             context['Flag'] = True
             context['show_datalist'] = show_datalist
         
     return render(request, 'tvshow/add_search.html', {'context':context})
 
+@login_required(login_url='/login')
 def single_show(request, show_slug):
     show = Show.objects.get(slug__iexact = show_slug)
     next_episode = show.next_episode
     watched_pct = show.episode_watch_count / show.total_episodes * 100
     return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct })
 
+@login_required(login_url='/login')
 def episode_swt(request):
     if request.method == 'POST':
         episode_id = request.POST.get('episode_swt')
@@ -126,6 +177,7 @@ def episode_swt(request):
                 return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/all')
 
+@login_required(login_url='/login')
 def season_swt(request):
     if request.method == 'POST':
         season_id = request.POST.get('season_swt')
@@ -136,6 +188,7 @@ def season_swt(request):
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/all')
 
+@login_required(login_url='/login')
 def recommended(request):
     try:
         predictions = get_recommendations()
@@ -147,6 +200,7 @@ def recommended(request):
     shuffle(predicted_shows)
     return render(request, 'tvshow/recommended.html', {'predicted_shows':predicted_shows})
 
+@login_required(login_url='/login')
 def search(request):
     search_query = request.GET.get('query')
     show_list = Show.objects.filter(seriesName__icontains=search_query)
@@ -155,18 +209,20 @@ def search(request):
         return render(request, 'tvshow/search_page.html', {'show_data':show_list, 'episode_list':episode_list})
     return HttpResponseRedirect('/all')
 
+@login_required(login_url='/login')
 def update_all_continuing(request):
     show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=datetime.now()-timedelta(days=7)))
     for show in show_list:
         flag = show.update_show_data()
         show.last_updated = datetime.now()
         show_data = get_series_with_id(int(show.tvdbID))
-        show.network = show_data['originalNetwork']['name']
+        show.network = show_data['latestNetwork']['name']
         show.save()
         if flag:
             messages.success(request, '%s has been updated.'%show.seriesName)
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def delete_show(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -179,6 +235,7 @@ def delete_show(request):
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def mark_all_unwatched(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -192,7 +249,7 @@ def mark_all_unwatched(request):
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
                 
-
+@login_required(login_url='/login')
 def mark_all_watched(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -206,6 +263,7 @@ def mark_all_watched(request):
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def later(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -218,6 +276,7 @@ def later(request):
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def now(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
@@ -231,6 +290,7 @@ def now(request):
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
 
+@login_required(login_url='/login')
 def stop(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_id')
