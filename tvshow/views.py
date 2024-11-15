@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, download_image
+from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation
 from .utils.recommender import get_recommendations
 from .models import Show,Season,Episode
 from django.db.models import Q
@@ -92,9 +92,10 @@ def history(request):
 def update_show(request):
     if request.method == 'POST':
         show_id = request.POST.get('show_info')
+        season_to_update = request.POST.get('season',0)
         show = Show.objects.get(id=show_id)
         if show:
-            show.update_show_data()
+            show.update_show_data(season_to_update)
             show.last_updated = datetime.now()
             show.save()
             return HttpResponseRedirect('/show/%s'%show.slug)
@@ -152,8 +153,13 @@ def add_search(request):
         show_datalist = show_datalist_full[:10]
         if show_datalist is not None:
             for show in show_datalist:
+                if 'primary_language' in show:
+                    if show['primary_language'] != 'eng':
+                        show_eng = get_series_translation(show['tvdb_id'],'eng')
+                        show['name'] = show_eng['name']
+                        show['overview'] = show_eng['overview']
                 try:
-                    show['image'] = download_image(show['tvdb_id'])
+                    show['image'] = get_image_link(show['tvdb_id'])
                 except:
                     show['image'] = 'http://twokeyfun.com/noimage.jpg'
             context['Flag'] = True
@@ -219,7 +225,7 @@ def search(request):
 def update_all_continuing(request):
     show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=datetime.now()-timedelta(days=7)))
     for show in show_list:
-        flag = show.update_show_data()
+        flag = show.update_show_data(0)
         show.last_updated = datetime.now()
         show_data = get_series_with_id(int(show.tvdbID))
         show.network = show_data['latestNetwork']['name']

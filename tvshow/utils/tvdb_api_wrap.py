@@ -39,7 +39,13 @@ def get_all_episodes(tvdbID,start_season):
 			break
 	return show
 
-def download_image(tvdbID):
+def get_series_translation(tvdbID,language):
+	return tvdb.get_series_translation(tvdbID,language)
+
+def get_episode_translation(tvdb_epid,language):
+	return tvdb.get_episode_translation(tvdb_epid,language)
+
+def get_image_link(tvdbID):
 	series = tvdb.get_series_artworks(tvdbID, 'en')
 	image = series['image']
 	#print(image)

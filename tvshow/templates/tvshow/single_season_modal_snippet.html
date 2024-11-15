@@ -14,6 +14,10 @@
           <button class="btn btn-sm btn-primary float-xs-right" type="submit">Mark Watched</button>
           {% endif %}
         </form>
+        <form class="form-inline" action="/update_show" method="post">{% csrf_token %}
+          <input type="hidden" name="show_info" value="{{show.id}}">
+          <input type="hidden" name="season" value="{{season.number}}">
+        <button class="btn btn-sm btn-primary float-xs-right" type="submit">Update</button>
       </div>
       <div class="modal-body">
         <ul class="list-group">

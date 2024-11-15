@@ -3,7 +3,7 @@ from datetime import datetime
 from django.utils.text import slugify
 from django.db.models import Q
 import json
-from .utils.tvdb_api_wrap import download_image,get_season_episode_list,get_all_episodes,get_series_with_id
+from .utils.tvdb_api_wrap import *
 
 class Show(models.Model):
 	tvdbID = models.CharField(max_length=50)
@@ -23,15 +23,28 @@ class Show(models.Model):
 	last_updated = models.DateTimeField(null=True, blank=True)
 	watch_later = models.BooleanField(default = False)
 	stopped_watching = models.BooleanField(default = False)
+	language = models.CharField(max_length=10, default='eng')
 
 	def __str__(self):
 		return self.seriesName
 
 	def add_show(self, data, runningStatus):
-		self.seriesName = data['name']
-		self.slug = slugify(self.seriesName)
-		self.overview = data['overview']
-		self.banner = download_image(data['id'])
+		self.language = data['originalLanguage']
+		if self.language != 'eng':
+			t = get_series_translation(data['id'],'eng')
+			self.seriesName = t['name']
+			try:
+				self.overview = t['overview']
+			except:
+				pass
+		else:
+			self.seriesName = data['name']
+			self.overview = data['overview']
+		try:
+			self.slug = data['slug']
+		except:
+			self.slug = slugify(self.seriesName)
+		self.banner = get_image_link(data['id'])
 		for i in range(len(data['remoteIds'])):
 			if data['remoteIds'][i]['sourceName'] == 'IMDB':
 				self.imdbID = data['remoteIds'][i]['id']
@@ -46,6 +59,10 @@ class Show(models.Model):
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
+			try:
+				self.firstAired = datetime.strptime(data['first_air_time'], '%Y-%m-%d').date()
+			except:
+				pass
 			pass
 		self.save()
 
@@ -75,10 +92,13 @@ class Show(models.Model):
 	def next_episode(self):
 		return Episode.objects.filter(Q(season__show=self),Q(status_watched=False)).first()
 
-	def update_show_data(self):
+	def update_show_data(self,season_to_update):
 		flag = False
 		tvdbID = self.tvdbID
-		current_season = self.season_set.all().last()
+		if season_to_update == '0':
+			current_season = self.season_set.all().last()
+		else:
+			current_season = self.season_set.get(number=season_to_update)
 		current_season_db_data = current_season.episode_set.all()
 		current_season_oln_data = get_season_episode_list(tvdbID, current_season.number)
 		counter = 0
@@ -93,19 +113,20 @@ class Show(models.Model):
 					episode = Episode()
 					episode.add_episode(current_season,new_episode)
 					flag=True
-		range_starter = current_season.number + 1
-		new_seasons = get_all_episodes(tvdbID, range_starter)
-		for i in range(len(new_seasons)):
-			string = 'Season' + str(range_starter+i)
-			season_data = new_seasons[string]
-			season = Season()
-			season.add_season(self, i+range_starter)
-			season_episodes_data = new_seasons[string]
-			flag=True
-			for season_episode in season_episodes_data:
-				if season_episode['name']:
-					episode = Episode()
-					episode.add_episode(season, season_episode)
+		if season_to_update ==0:
+			range_starter = current_season.number + 1
+			new_seasons = get_all_episodes(tvdbID, range_starter)
+			for i in range(len(new_seasons)):
+				string = 'Season' + str(range_starter+i)
+				season_data = new_seasons[string]
+				season = Season()
+				season.add_season(self, i+range_starter)
+				season_episodes_data = new_seasons[string]
+				flag=True
+				for season_episode in season_episodes_data:
+					if season_episode['name']:
+						episode = Episode()
+						episode.add_episode(season, season_episode)
 		return flag
 	
 	def update_imdb(self):
@@ -189,16 +210,16 @@ class Episode(models.Model):
 	def add_episode(self, season, data):
 		self.season = season
 		self.episodeName = data['name']
+		try:
+			self.overview = data['overview']
+		except:
+			pass
 		self.number = int(data['number'])
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
 			pass
 		self.tvdbID = data['id']
-		try:
-			self.overview = data['overview']
-		except:
-			pass
 		self.save()
 
 	def wst(self):
@@ -213,7 +234,12 @@ class Episode(models.Model):
 			self.season.save()
 
 	def compare_or_update(self, new_data):
-		self.episodeName = new_data['name']
+		t = {}
+		if self.season.show.language != 'eng':
+			t = get_episode_translation(self.tvdbID,'eng')
+			self.episodeName = t['name']
+		else:
+			self.episodeName = new_data['name']
 		self.save()
 		if new_data['aired'] != "":
 			try:
@@ -222,5 +248,11 @@ class Episode(models.Model):
 			except:
 				pass
 		if self.overview is None:
-			self.overview = new_data['overview']
+			if self.season.show.language != 'eng':
+				try:
+					self.overview = t['overview']
+				except:
+					self.overview = new_data['overview']
+			else:
+				self.overview = new_data['overview']
 			self.save()
