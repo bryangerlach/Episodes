@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Q
 import json
@@ -53,7 +54,7 @@ class Show(models.Model):
 		self.network = data['originalNetwork']['name']
 		self.runningStatus = runningStatus
 		self.genre_list = json.dumps(data['genres'])
-		self.last_updated = datetime.now()
+		self.last_updated = timezone.now()
 		self.watch_later = False
 		self.stopped_watching = False
 		try:

@@ -14,49 +14,54 @@
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<!-- Bootstrap icons -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+	<nav class="navbar navbar-expand navbar-dark bg-primary">
 		<div class="container-fluid">
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler01"
-				aria-controls="navbarToggler01" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<!-- <a class="navbar-brand" href="/">Episodes</a> -->
-			<div class="collapse navbar-collapse" id="navbarToggler01">
-				<a class="navbar-brand" href="/">Episodes</a>
-				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					<li class="nav-item">
-						<a class="nav-link" href="/all">All</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/upcoming">Upcoming</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/history">History</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/add_search">Add</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/update_all_shows">Update</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/watch_later">Watch Later</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/stopped_watching">Stopped Watching</a>
-					</li>
-				</ul>
-				<form class="d-flex" action="{% url 'tvshow:search' %}">
-					<input class="form-control me-2" name='query' type="text" placeholder="Search">
-					<button class="btn btn-success" type="submit">Search</button>
-				</form>
-				<Div class="col-auto">
-					<button class="btn btn-dark shadow" id="btnSwitch">Light/Dark</button>
-				</Div>
-			</div>
+			<a class="navbar-brand" href="/"><i class="bi-tv"></i></a>
+			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+				<li class="nav-item">
+					<a class="nav-link" href="/add_search"><i class="bi-plus-square"></i></a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/update_all_shows"><i class="bi-arrow-clockwise"></i></a>
+				</li>
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi-filter"></i></a>
+					<ul class="dropdown-menu" data-bs-theme="dark">
+						<li class="dropdown-item">
+							<a class="nav-link" href="/all">All</a>
+						</li>
+						<li class="dropdown-item">
+							<a class="nav-link" href="/upcoming">Upcoming</a>
+						</li>
+						<li class="dropdown-item">
+							<a class="nav-link" href="/history">History</a>
+						</li>
+						<li class="dropdown-item">
+							<a class="nav-link" href="/watch_later">Watch Later</a>
+						</li>
+						<li class="dropdown-item">
+							<a class="nav-link" href="/stopped_watching">Stopped Watching</a>
+						</li>
+						<li>
+							<form class="d-flex" action="{% url 'tvshow:search' %}">
+								<input class="form-control me-2" name='query' type="text" placeholder="Search">
+								<button class="btn btn-success" type="submit">Search</button>
+							</form>
+						</li>
+						<li>
+							<Div class="col-auto">
+								<button class="btn btn-dark shadow" id="btnSwitch">Light/Dark</button>
+							</Div>
+						</li>
+					</ul>
+				</li>
+			</ul>
+				
 		</div>
 	</nav>
 	<br>
@@ -85,11 +90,11 @@
 		document.documentElement.setAttribute('data-bs-theme', myTheme)
 		document.getElementById('btnSwitch').addEventListener('click', () => {
 			if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
-				document.documentElement.setAttribute('data-bs-theme', 'light')
+				document.documentElement.setAttribute('data-bs-theme', 'light');
 				setCookie("theme","light",365);
 			}
 			else {
-				document.documentElement.setAttribute('data-bs-theme', 'dark')
+				document.documentElement.setAttribute('data-bs-theme', 'dark');
 				setCookie("theme","dark",365);
 			}
 		})

@@ -7,6 +7,7 @@ from .models import Show,Season,Episode
 from django.db.models import Q
 from django.contrib import messages
 from datetime import timedelta, datetime
+from django.utils import timezone
 from random import shuffle
 from django.contrib import auth
 from django.contrib.auth.models import User
@@ -96,7 +97,7 @@ def update_show(request):
         show = Show.objects.get(id=show_id)
         if show:
             show.update_show_data(season_to_update)
-            show.last_updated = datetime.now()
+            show.last_updated = timezone.now()
             show.save()
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
@@ -223,10 +224,10 @@ def search(request):
 
 @login_required(login_url='/login')
 def update_all_continuing(request):
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=datetime.now()-timedelta(days=7)))
+    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
     for show in show_list:
-        flag = show.update_show_data(0)
-        show.last_updated = datetime.now()
+        flag = show.update_show_data("0")
+        show.last_updated = timezone.now()
         show_data = get_series_with_id(int(show.tvdbID))
         show.network = show_data['latestNetwork']['name']
         show.save()
