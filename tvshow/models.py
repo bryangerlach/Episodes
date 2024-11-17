@@ -113,7 +113,7 @@ class Show(models.Model):
 					episode = Episode()
 					episode.add_episode(current_season,new_episode)
 					flag=True
-		if season_to_update ==0:
+		if season_to_update == '0':
 			range_starter = current_season.number + 1
 			new_seasons = get_all_episodes(tvdbID, range_starter)
 			for i in range(len(new_seasons)):
@@ -238,6 +238,10 @@ class Episode(models.Model):
 		if self.season.show.language != 'eng':
 			t = get_episode_translation(self.tvdbID,'eng')
 			self.episodeName = t['name']
+			try:
+				self.overview = t['overview']
+			except:
+				pass
 		else:
 			self.episodeName = new_data['name']
 		self.save()
