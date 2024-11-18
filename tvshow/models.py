@@ -96,6 +96,9 @@ class Show(models.Model):
 	def update_show_data(self,season_to_update):
 		flag = False
 		tvdbID = self.tvdbID
+		show_online_data = get_series(tvdbID)
+		self.banner = show_online_data['image']
+		self.save()
 		if season_to_update == '0':
 			current_season = self.season_set.all().last()
 		else:
