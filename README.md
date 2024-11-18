@@ -46,6 +46,25 @@ To use clone the production branch, install requirements, run the following term
 ### run the server, change 8000 with whatever you want
 
 > python manage.py runserver 0.0.0.0:8000
+
+### you can now access the webpage from http://localhost:8000, you can use nginx, caddy, or other reverse proxy for better access
+
+## You will also want to set up a cron job to update the database with thetvdb api data
+### The following command will add a cron job to update all continuing shows for new data at 3am and 3pm everyday (this only works on linux):
+
+> python manage.py crontab add
+
+to show cron jobs created by this server
+
+> python manage.py crontab show
+
+to delete cron jobs created by this server
+
+> python manage.py crontab remove
+
+### You can also manually update the database in the app by pressing the update button, or from commandline by running:
+
+> python manage.py update_db
     
 ![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/1.jpeg)
 ![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/2.jpeg)

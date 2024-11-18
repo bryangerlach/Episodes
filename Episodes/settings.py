@@ -32,6 +32,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split()
 # Application definition
 
 INSTALLED_APPS = [
+    'django_crontab',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -67,6 +68,11 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+CRONJOBS = [
+    ('0 3 * * *', 'tvshow.cron.update_db_cron'),
+    ('0 15 * * *', 'tvshow.cron.update_db_cron')
 ]
 
 WSGI_APPLICATION = 'Episodes.wsgi.application'

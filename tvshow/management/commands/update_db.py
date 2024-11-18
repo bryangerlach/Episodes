@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand, CommandError
-from tvshow.views import update_all_continuing
 from tvshow.models import Show
 from django.db.models import Q
 from datetime import timedelta
