@@ -6,7 +6,6 @@ urlpatterns = [
     url(r'^update_show', views.update_show),
     url(r'^delete_show', views.delete_show),
     url(r'^update_rating', views.update_show_rating),
-    url(r'^recommended', views.recommended),
     url(r'^add_search', views.add_search),
     url(r'^add', views.add),
     url(r'^search', views.search, name='search'),

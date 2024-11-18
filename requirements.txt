@@ -1,15 +1,5 @@
-beautifulsoup4
-bleach
-Cython
 Django
-html5lib
-numpy
-pandas
-python-dateutil
-pytz
 requests
-scikit-learn
-scipy
 django-utils-six
-webencodings
 tvdb_v4_official
+django-crontab

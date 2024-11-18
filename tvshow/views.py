@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation
-from .utils.recommender import get_recommendations
 from .models import Show,Season,Episode
 from django.db.models import Q
 from django.contrib import messages
@@ -156,9 +155,12 @@ def add_search(request):
             for show in show_datalist:
                 if 'primary_language' in show:
                     if show['primary_language'] != 'eng':
-                        show_eng = get_series_translation(show['tvdb_id'],'eng')
-                        show['name'] = show_eng['name']
-                        show['overview'] = show_eng['overview']
+                        try:
+                            show_eng = get_series_translation(show['tvdb_id'],'eng')
+                            show['name'] = show_eng['name']
+                            show['overview'] = show_eng['overview']
+                        except:
+                            pass
                 try:
                     show['image'] = get_image_link(show['tvdb_id'])
                 except:
@@ -202,18 +204,6 @@ def season_swt(request):
     return HttpResponseRedirect('/all')
 
 @login_required(login_url='/login')
-def recommended(request):
-    try:
-        predictions = get_recommendations()
-    except:
-        predictions = []
-    predicted_shows = []
-    for prediction in predictions:
-        predicted_shows.append(get_series_with_id(prediction))
-    shuffle(predicted_shows)
-    return render(request, 'tvshow/recommended.html', {'predicted_shows':predicted_shows})
-
-@login_required(login_url='/login')
 def search(request):
     search_query = request.GET.get('query')
     show_list = Show.objects.filter(seriesName__icontains=search_query)
@@ -233,6 +223,7 @@ def update_all_continuing(request):
         show.save()
         if flag:
             messages.success(request, '%s has been updated.'%show.seriesName)
+            print('%s has been updated.'%show.seriesName)
     return HttpResponseRedirect('/')
 
 @login_required(login_url='/login')
