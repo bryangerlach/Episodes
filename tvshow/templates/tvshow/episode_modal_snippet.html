@@ -1,0 +1,19 @@
+<div class="modal fade" id="s{{episode.tvdbID}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" rolepytho="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <div class="d-grid mx-auto">
+          <button type="button" class="btn btn-sm btn-secondary me-md-2" data-bs-dismiss="modal">Close</button>
+          <h4 class="modal-title float-xs-left" id="myModalLabel">{{episode.episodeName}}</h4>
+          <img class="card-img-top mx-auto" src="{{episode.episodeImage}}" alt="Card image cap" style="width: 300px;">
+        </div>
+      </div>
+      <div class="modal-body">
+            <div class="card card-block card-inverse card-danger">
+              <p class="card-text">
+                {{episode.overview}}
+              </p>
+            </div>
+      </div>
+  </div>
+</div>

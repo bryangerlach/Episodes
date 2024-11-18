@@ -26,7 +26,9 @@
           {% endif %}
           <small class="text-body-secondary">S{{show.next_episode.season.number}} |
             E{{show.next_episode.number}} </small></p>
-        <p class="card-text"><small class="text-body-secondary">{{show.next_episode.episodeName}}</small></p>
+        <p class="card-text"><small class="text-body-secondary"><a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
+        {{show.next_episode.episodeName}}</a></small></p>
+        
       </div>
       <div class="col-1 col-md-1 align-self-center">
         <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
@@ -55,7 +57,7 @@
         </div>
       </div>
       {% endif %}
-
+    {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
     </div>
   </div>
 

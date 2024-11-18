@@ -45,6 +45,10 @@ def get_series_translation(tvdbID,language):
 def get_episode_translation(tvdb_epid,language):
 	return tvdb.get_episode_translation(tvdb_epid,language)
 
+def get_episode(episodeID):
+	episode = tvdb.get_episode(episodeID)
+	return episode
+
 def get_image_link(tvdbID):
 	series = tvdb.get_series_artworks(tvdbID, 'en')
 	image = series['image']

@@ -1,3 +1,4 @@
+{% load my_filters %}
 <div class="modal fade" id="s{{season.number}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog" rolepytho="document">
     <div class="modal-content">
@@ -21,7 +22,7 @@
       </div>
       <div class="modal-body">
         <ul class="list-group">
-          {% for episode in season.episode_set.all %}
+          {% for episode in season.episode_set.all|order_by:'number' %}
           <li class="list-group-item">
             
             <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}

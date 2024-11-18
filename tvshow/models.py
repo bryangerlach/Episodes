@@ -202,6 +202,7 @@ class Episode(models.Model):
 	tvdbID = models.CharField(max_length=50)
 	overview = models.TextField(null=True, blank=True)
 	status_watched = models.BooleanField(default=False)
+	episodeImage = models.CharField(max_length=150, null=True, blank=True)
 
 	def __str__(self):
 		showname = self.season.show.seriesName
@@ -218,6 +219,10 @@ class Episode(models.Model):
 		self.number = int(data['number'])
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
+		except:
+			pass
+		try:
+			self.episodeImage = data['image']
 		except:
 			pass
 		self.tvdbID = data['id']
@@ -245,11 +250,10 @@ class Episode(models.Model):
 				pass
 		else:
 			self.episodeName = new_data['name']
-		self.save()
+		
 		if new_data['aired'] != "":
 			try:
 				self.firstAired = new_data['aired']
-				self.save()
 			except:
 				pass
 		if self.overview is None:
@@ -260,4 +264,10 @@ class Episode(models.Model):
 					self.overview = new_data['overview']
 			else:
 				self.overview = new_data['overview']
-			self.save()
+		if self.episodeImage is None:
+			t = get_episode(self.tvdbID)
+			try:
+				self.episodeImage = t['image']
+			except:
+				pass
+		self.save()
