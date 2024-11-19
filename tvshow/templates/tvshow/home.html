@@ -49,6 +49,7 @@
           aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0" aria-valuemax="{{show.total_episodes}}"></div>
       </div>
       {% endif %}
+      {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
       {% else %}
       <div class="col-8 col-md-3">
         <div class="card-title">
@@ -57,7 +58,7 @@
         </div>
       </div>
       {% endif %}
-    {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
+    
     </div>
   </div>
 

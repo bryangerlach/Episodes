@@ -27,6 +27,7 @@
             
             <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
               <input type="hidden" name="episode_swt" value="{{episode.id}}">
+              <input type="hidden" name="home" value="away">
               {% if episode.status_watched == True %}
               <input type="checkbox" onclick="this.form.submit();" checked>
               {% else %}

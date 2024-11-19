@@ -181,12 +181,12 @@ def single_show(request, show_slug):
 def episode_swt(request):
     if request.method == 'POST':
         episode_id = request.POST.get('episode_swt')
-        from_home = request.POST.get('home',None)
+        from_home = request.POST.get('home','')
         episode = Episode.objects.get(id = episode_id)
         if episode:
             episode.wst()
             show = episode.season.show
-            if from_home:
+            if from_home == 'home':
                 return HttpResponseRedirect('/')
             else:
                 return HttpResponseRedirect('/show/%s'%show.slug)

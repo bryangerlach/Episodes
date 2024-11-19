@@ -37,6 +37,7 @@
           <li class="list-group-item">
             <form class='form-inline float-xs-right' action="/episode_swt" method="post">{% csrf_token %}
               <input type="hidden" name="episode_swt" value="{{next_episode.id}}">
+              <input type="hidden" name="home" value="away">
               {% if next_episode.status_watched == True %}
               <input type="checkbox" onclick="this.form.submit();" checked>
               {% else %}

@@ -5,7 +5,9 @@
           <div class="d-grid mx-auto">
           <button type="button" class="btn btn-sm btn-secondary me-md-2" data-bs-dismiss="modal">Close</button>
           <h4 class="modal-title float-xs-left" id="myModalLabel">{{episode.episodeName}}</h4>
+          {% if episode.episodeImage %}
           <img class="card-img-top mx-auto" src="{{episode.episodeImage}}" alt="Card image cap" style="width: 300px;">
+          {% endif %}
         </div>
       </div>
       <div class="modal-body">

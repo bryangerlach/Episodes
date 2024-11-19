@@ -232,7 +232,12 @@ class Episode(models.Model):
 		self.save()
 
 	def wst(self):
-		self.status_watched = not(self.status_watched)
+		if self.status_watched:
+			self.status_watched = False
+			self.date_watched = None
+		else:
+			self.status_watched = True
+			self.date_watched = timezone.now()
 		self.save()
 		self.season.show.save()
 		if self.season.watch_count == self.season.episode_count:
