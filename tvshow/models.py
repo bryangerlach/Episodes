@@ -201,7 +201,7 @@ class Episode(models.Model):
 	episodeName = models.CharField(max_length=50, blank=True, null=True)
 	number = models.IntegerField()
 	firstAired = models.DateField(null=True, blank = True)
-	date_watched = models.DateField(null=True, blank=True, auto_now=True, auto_now_add=False)
+	date_watched = models.DateField(null=True, blank=True)
 	tvdbID = models.CharField(max_length=50)
 	overview = models.TextField(null=True, blank=True)
 	status_watched = models.BooleanField(default=False)
