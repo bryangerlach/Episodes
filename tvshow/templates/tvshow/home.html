@@ -1,6 +1,19 @@
 {% extends "tvshow/header.html" %}
 {% block content %}
 <div class="container">
+  <h1>
+  {% if view_type == 'all' %}
+    All Shows
+  {% elif view_type == 'watch_later' %}
+    Watch Later
+  {% elif view_type == 'stopped_watching' %}
+    Stopped Watching
+  {% elif view_type == 'upcoming' %}
+    Upcoming
+  {% else %}
+    Watch Next
+  {% endif %}
+  </h1>
   {% for show in show_data %}
   <div class="card mb-2" style="max-width: 540px;">
     <div class="row g-0 align-items-start">

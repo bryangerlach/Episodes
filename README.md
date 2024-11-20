@@ -66,6 +66,7 @@ to delete cron jobs created by this server
 
 > python manage.py update_db
     
-![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/1.jpeg)
-![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/2.jpeg)
-![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/3.jpeg)
+![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/1.png)
+![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/2.png)
+![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/3.png)
+![alt tag](https://raw.githubusercontent.com/bryangerlach/Episodes/master/4.png)
