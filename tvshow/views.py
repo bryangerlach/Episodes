@@ -49,7 +49,7 @@ def user_register(request):
     user = User.objects.create_user(username,None,password1)
     result['msg'] = str(user)
     result['code'] = 1
-    return render(request, 'tvshow/login.html')
+    return HttpResponseRedirect('/')
 
 def user_logout(request):
     auth.logout(request)

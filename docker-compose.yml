@@ -2,9 +2,9 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    image: bryangerlach/episodes:latest
     ports:
-      - "3080:3080"
+      - "8000:8000"
     volumes:
       - .:/app
-    command: python manage.py runserver 0.0.0.0:3080
+    command: python manage.py runserver
