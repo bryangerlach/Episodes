@@ -4,7 +4,7 @@ services:
   web:
     image: bryangerlach/episodes:latest
     ports:
-      - "8000:8000"
+      - "3000:3000"
     volumes:
       - .:/app
-    command: python manage.py runserver
+    command: python manage.py runserver 0.0.0.0:3000
