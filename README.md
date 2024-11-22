@@ -8,6 +8,22 @@ Forked from https://github.com/guptachetan1997/Episodes
 
 Inspired from https://github.com/jamienicol/episodes
 
+## Install using Docker Compose
+
+<ol>
+    <li>Download the docker-compose.yml file to your computer</li>
+    <li>Edit the docker-compose.yml file to change the SECRET_KEY and CSRF_TRUSTED_ORIGINS variables, and change the port if you want to</li>
+        <ul>
+            <li>SECRET_KEY - this can be generated with python like this:  `python3 -c 'import secrets; print(secrets.token_hex(100))'`</li>
+            <li>CSRF_TRUSTED_ORIGINS - this needs to be where you will access the server from, multiple origins can be separated by a space like this: `"http://localhost https://example.com"`</li>
+            <li>Change the port on the left side only unless you know what you are doing. If you want to access from port 8080, change to `"8080:3000"`</li>
+        </ul>
+    <li>Run: `docker compose pull`</li>
+    <li>Run: `docker compose up -d`</li>
+    <li>Access your server from http://localhost:3000</li>
+</ol>
+
+## Install Manually
 
 To use clone the production branch, install requirements, run the following terminal commands:
 

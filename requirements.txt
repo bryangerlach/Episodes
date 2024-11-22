@@ -3,3 +3,4 @@ requests
 django-utils-six
 tvdb_v4_official
 django-crontab
+gunicorn
