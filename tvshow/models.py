@@ -253,9 +253,9 @@ class Episode(models.Model):
 	def compare_or_update(self, new_data):
 		t = {}
 		if self.season.show.language != 'eng':
-			t = get_episode_translation(self.tvdbID,'eng')
-			self.episodeName = t['name']
 			try:
+				t = get_episode_translation(self.tvdbID,'eng')
+				self.episodeName = t['name']
 				self.overview = t['overview']
 			except:
 				pass
