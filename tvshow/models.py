@@ -7,6 +7,7 @@ import json
 from .utils.tvdb_api_wrap import *
 
 class Show(models.Model):
+	id = models.AutoField(primary_key=True)
 	tvdbID = models.CharField(max_length=50)
 	seriesName = models.CharField(max_length=50)
 	overview = models.TextField()
@@ -142,6 +143,7 @@ class Show(models.Model):
 				self.imdbID = online_show_data['remoteIds'][i]['id']
 
 class Season(models.Model):
+	id = models.AutoField(primary_key=True)
 	show = models.ForeignKey(Show, on_delete=models.CASCADE)
 	number = models.IntegerField()
 	status_watched = models.BooleanField(default = False)
@@ -197,6 +199,7 @@ class Season(models.Model):
 		return flag
 
 class Episode(models.Model):
+	id = models.AutoField(primary_key=True)
 	season = models.ForeignKey(Season, on_delete=models.CASCADE)
 	episodeName = models.CharField(max_length=50, blank=True, null=True)
 	number = models.IntegerField()

@@ -1,10 +1,9 @@
-version: "3.8"
-
 services:
   web:
     image: bryangerlach/episodes:latest
+    environment:
+      SECRET_KEY: "%qufh2ea8!-$%_ctzw=in*d2__i#s*3_mph82!+(3m9g*!%@tt"
+      CSRF_TRUSTED_ORIGINS: "http://localhost"
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
     command: python manage.py runserver 0.0.0.0:3000

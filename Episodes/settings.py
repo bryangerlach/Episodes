@@ -29,6 +29,8 @@ DEBUG = os.environ.get('DEBUG',False)
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split()
 
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'
+
 # Application definition
 
 INSTALLED_APPS = [
