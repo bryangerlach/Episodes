@@ -85,6 +85,10 @@ class Show(models.Model):
 	@property
 	def total_episodes(self):
 		return Episode.objects.filter(season__show = self).count()
+	
+	@property
+	def total_aired_episodes(self):
+		return Episode.objects.filter(Q(season__show = self),Q(firstAired__lt=timezone.now())).count()
 
 	@property
 	def get_genres(self):

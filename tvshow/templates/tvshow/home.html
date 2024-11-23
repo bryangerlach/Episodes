@@ -1,4 +1,5 @@
 {% extends "tvshow/header.html" %}
+{% load mathfilters %}
 {% block content %}
 <div class="container">
   <h1>
@@ -38,7 +39,11 @@
           <span class="badge bg-warning text-dark">New</span> 
           {% endif %}
           <small class="text-body-secondary">S{{show.next_episode.season.number}} |
-            E{{show.next_episode.number}} </small></p>
+            E{{show.next_episode.number}} 
+            {% if show.total_aired_episodes|sub:show.episode_watch_count > 1 %}
+            +{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}
+            {% endif %}
+            </small></p>
         <p class="card-text"><small class="text-body-secondary"><a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
         {{show.next_episode.episodeName}}</a></small></p>
         
