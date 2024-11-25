@@ -57,8 +57,10 @@ def user_logout(request):
 
 @login_required(login_url='/login')
 def home(request, view_type):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
     time = datetime.now()
-    show_data = Show.objects.all().order_by('-modified')
+    show_data = user.show_set.all().order_by('-modified')
     if view_type == 'all':
         flag = False
     elif view_type == 'watch_later':
@@ -84,16 +86,21 @@ def home(request, view_type):
 
 @login_required(login_url='/login')
 def history(request):
-    episode_data_full = Episode.objects.filter(status_watched=True).order_by('-date_watched')
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    shows = Show.objects.filter(user=user)
+    episode_data_full = Episode.objects.filter(season__show__in=shows, status_watched=True).order_by('-date_watched')
     episode_data = episode_data_full[:25]
     return render(request, 'tvshow/history.html', {'episode_data': episode_data})
 
 @login_required(login_url='/login')
 def update_show(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_info')
         season_to_update = request.POST.get('season',0)
-        show = Show.objects.get(id=show_id)
+        show = Show.objects.get(user=user, id=show_id)
         if show:
             show.update_show_data(season_to_update)
             show.last_updated = timezone.now()
@@ -101,32 +108,34 @@ def update_show(request):
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
 
-@login_required(login_url='/login')
-def update_show_rating(request):
-    if request.method == 'POST':
-        show_id = request.POST.get('show_id')
-        show = Show.objects.get(id=show_id)
-        if show:
-            new_rating = request.POST.get('new_rating')
-            show.userRating = new_rating
-            show.save()
-            return HttpResponseRedirect('/show/%s'%show.slug)
-    return HttpResponseRedirect('/')
+# @login_required(login_url='/login')
+# def update_show_rating(request):
+#     if request.method == 'POST':
+#         show_id = request.POST.get('show_id')
+#         show = Show.objects.get(id=show_id)
+#         if show:
+#             new_rating = request.POST.get('new_rating')
+#             show.userRating = new_rating
+#             show.save()
+#             return HttpResponseRedirect('/show/%s'%show.slug)
+#     return HttpResponseRedirect('/')
 
 @login_required(login_url='/login')
 def add(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         slug = ''
         tvdbID = request.POST.get('show_id')
         runningStatus = request.POST.get('runningStatus')
         try :
-            show = Show.objects.get(tvdbID=tvdbID)
+            show = Show.objects.get(user_id=user_id, tvdbID=tvdbID)
             slug = show.slug
-        except Show.DoesNotExist as e:
+        except:
             show_data = get_series_with_id(int(tvdbID))
             if show_data is not None:
                 show = Show()
-                show.add_show(show_data, runningStatus)
+                show.add_show(show_data, runningStatus, user)
                 slug = show.slug
                 seasons_data = get_all_episodes(int(tvdbID), 1)
                 for i in range(len(seasons_data)):
@@ -172,7 +181,9 @@ def add_search(request):
 
 @login_required(login_url='/login')
 def single_show(request, show_slug):
-    show = Show.objects.get(slug__iexact = show_slug)
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    show = Show.objects.get(user=user, slug__iexact = show_slug)
     next_episode = show.next_episode
     watched_pct = show.episode_watch_count / show.total_episodes * 100
     return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct })
@@ -180,9 +191,12 @@ def single_show(request, show_slug):
 @login_required(login_url='/login')
 def episode_swt(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        shows = Show.objects.filter(user=user)
         episode_id = request.POST.get('episode_swt')
         from_home = request.POST.get('home','')
-        episode = Episode.objects.get(id = episode_id)
+        episode = Episode.objects.get(season__show__in=shows, id = episode_id)
         if episode:
             episode.wst()
             show = episode.season.show
@@ -195,8 +209,11 @@ def episode_swt(request):
 @login_required(login_url='/login')
 def season_swt(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        shows = Show.objects.filter(user=user)
         season_id = request.POST.get('season_swt')
-        season = Season.objects.get(id = season_id)
+        season = Season.objects.get(show__in=shows, id = season_id)
         if season:
             season.wst()
             show = season.show
@@ -205,16 +222,21 @@ def season_swt(request):
 
 @login_required(login_url='/login')
 def search(request):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    shows = Show.objects.filter(user=user)
     search_query = request.GET.get('query')
-    show_list = Show.objects.filter(seriesName__icontains=search_query)
-    episode_list = Episode.objects.filter(Q(episodeName__icontains=search_query)|Q(overview__icontains=search_query))[:10]
+    show_list = Show.objects.filter(user=user, seriesName__icontains=search_query)
+    episode_list = Episode.objects.filter(Q(episodeName__icontains=search_query)|Q(overview__icontains=search_query),season__show__in=shows)[:10]
     if (show_list or episode_list) and search_query:
         return render(request, 'tvshow/search_page.html', {'show_data':show_list, 'episode_list':episode_list})
     return HttpResponseRedirect('/all')
 
 @login_required(login_url='/login')
 def update_all_continuing(request):
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)),user=user)
     for show in show_list:
         flag = show.update_show_data("0")
         show.last_updated = timezone.now()
@@ -229,10 +251,12 @@ def update_all_continuing(request):
 @login_required(login_url='/login')
 def delete_show(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 show.delete()
                 return HttpResponseRedirect('/')
             except:
@@ -242,10 +266,12 @@ def delete_show(request):
 @login_required(login_url='/login')
 def mark_all_unwatched(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 for season in show.season_set.all():
                     season.set_watched(False)
                 return HttpResponseRedirect('/')
@@ -256,10 +282,12 @@ def mark_all_unwatched(request):
 @login_required(login_url='/login')
 def mark_all_watched(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 for season in show.season_set.all():
                     season.set_watched(True)
                 return HttpResponseRedirect('/')
@@ -270,10 +298,12 @@ def mark_all_watched(request):
 @login_required(login_url='/login')
 def later(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 show.watch_later = True
                 show.save()
             except:
@@ -283,10 +313,12 @@ def later(request):
 @login_required(login_url='/login')
 def now(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 show.watch_later = False
                 show.stopped_watching = False
                 show.save()
@@ -297,10 +329,12 @@ def now(request):
 @login_required(login_url='/login')
 def stop(request):
     if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
         show_id = request.POST.get('show_id')
         if show_id:
             try:
-                show = Show.objects.get(id=show_id)
+                show = Show.objects.get(user=user, id=show_id)
                 show.stopped_watching = True
                 show.save()
             except:

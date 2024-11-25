@@ -3,11 +3,13 @@ from datetime import datetime
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Q
+from django.contrib.auth.models import User
 import json
 from .utils.tvdb_api_wrap import *
 
 class Show(models.Model):
 	id = models.AutoField(primary_key=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 	tvdbID = models.CharField(max_length=50)
 	seriesName = models.CharField(max_length=50)
 	overview = models.TextField()
@@ -30,7 +32,8 @@ class Show(models.Model):
 	def __str__(self):
 		return self.seriesName
 
-	def add_show(self, data, runningStatus):
+	def add_show(self, data, runningStatus, user):
+		self.user = user
 		self.language = data['originalLanguage']
 		if self.language != 'eng':
 			t = get_series_translation(data['id'],'eng')
