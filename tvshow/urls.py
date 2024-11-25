@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^now', views.now),
     url(r'^stop', views.stop),
     url(r'^login', views.login_view),
+    url(r'^logout',views.user_logout),
     url(r'^user_action',views.user_action),
     url(r'^user_register',views.user_register),
     url(r'^history',views.history)
