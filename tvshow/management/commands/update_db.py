@@ -9,6 +9,7 @@ class Command(BaseCommand):
     help = 'Updates the database from thetvdb api. This should be run on a cronjob or similar.'
 
     def handle(self, *args, **options):
+        print('updating database')
         show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
         for show in show_list:
             flag = show.update_show_data("0")

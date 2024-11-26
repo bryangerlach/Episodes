@@ -10,4 +10,6 @@ done
 
 python manage.py crontab add
 
+cron -f
+
 exec "$@"
