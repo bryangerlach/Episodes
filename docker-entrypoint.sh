@@ -8,8 +8,8 @@ while ! python manage.py migrate  2>&1; do
     sleep 3
 done
 
-python manage.py crontab add
+service cron restart
 
-cron -f
+python manage.py crontab add
 
 exec "$@"
