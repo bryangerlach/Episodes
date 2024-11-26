@@ -74,8 +74,8 @@ TEMPLATES = [
 ]
 
 CRONJOBS = [
-    ('0 3 * * *', 'tvshow.cron.update_db_cron'),
-    ('0 15 * * *', 'tvshow.cron.update_db_cron')
+    ('0 3 * * *', 'tvshow.cron.update_db_cron', '>> /tmp/update_db.log'),
+    ('0 15 * * *', 'tvshow.cron.update_db_cron', '>> /tmp/update_db.log')
 ]
 
 WSGI_APPLICATION = 'Episodes.wsgi.application'
