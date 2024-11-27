@@ -12,12 +12,15 @@ class Command(BaseCommand):
         print('updating database')
         show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
         for show in show_list:
-            flag = show.update_show_data("0")
-            show.last_updated = timezone.now()
-            show_data = get_series_with_id(int(show.tvdbID))
-            show.network = show_data['latestNetwork']['name']
-            show.save()
-            if flag:
-                print('%s has been updated.'%show.seriesName)
+            try:
+                flag = show.update_show_data("0")
+                show.last_updated = timezone.now()
+                show_data = get_series_with_id(int(show.tvdbID))
+                show.network = show_data['latestNetwork']['name']
+                show.save()
+                if flag:
+                    print('%s has been updated.'%show.seriesName)
+            except:
+                print('%s had errors while updating.'%show.seriesName)
         
-        self.stdout.write(self.style.SUCCESS('Task completed successfully!'))
+        print('Update task completed!')
