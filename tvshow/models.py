@@ -283,8 +283,8 @@ class Episode(models.Model):
 			else:
 				self.overview = new_data['overview']
 		if self.episodeImage is None:
-			t = get_episode(self.tvdbID)
 			try:
+				t = get_episode(self.tvdbID)
 				self.episodeImage = t['image']
 			except:
 				pass
