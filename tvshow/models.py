@@ -216,6 +216,7 @@ class Episode(models.Model):
 	overview = models.TextField(null=True, blank=True)
 	status_watched = models.BooleanField(default=False)
 	episodeImage = models.CharField(max_length=150, null=True, blank=True)
+	finaleType = models.CharField(max_length=30, null=True, blank=True)
 
 	def __str__(self):
 		showname = self.season.show.seriesName
@@ -239,6 +240,7 @@ class Episode(models.Model):
 		except:
 			pass
 		self.tvdbID = data['id']
+		self.finaleType = data['finaleType']
 		self.save()
 
 	def wst(self):
@@ -268,6 +270,8 @@ class Episode(models.Model):
 				pass
 		else:
 			self.episodeName = new_data['name']
+
+		self.finaleType = new_data['finaleType']
 		
 		if new_data['aired'] != "":
 			try:

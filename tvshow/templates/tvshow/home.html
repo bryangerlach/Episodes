@@ -44,8 +44,13 @@
             +{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}
             {% endif %}
             </small></p>
-        <p class="card-text"><small class="text-body-secondary"><a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
-        {{show.next_episode.episodeName}}</a></small></p>
+        <p class="card-text"><small class="text-body-secondary">
+        {% if show.next_episode.finaleType %}
+          <span class="badge bg-danger text-dark">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
+        {% endif %}
+        <a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
+        {{show.next_episode.episodeName}}</a>
+        </small></p>
         
       </div>
       <div class="col-1 col-md-1 align-self-center">
