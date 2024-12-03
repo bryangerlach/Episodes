@@ -21,5 +21,6 @@ urlpatterns = [
     url(r'^logout',views.user_logout),
     url(r'^user_action',views.user_action),
     url(r'^user_register',views.user_register),
-    url(r'^history',views.history)
+    url(r'^history',views.history),
+    url(r'^set_watch_delay', views.set_watch_delay)
 ]

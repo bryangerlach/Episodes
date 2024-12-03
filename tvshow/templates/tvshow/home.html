@@ -31,7 +31,7 @@
           {% if view_type == 'upcoming' %}
           {{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}<br>
           {% endif %}
-          {{show.seriesName}}
+          {{show.seriesName}} {% if show.delayWatch > 0 %}<span class="badge bg-info text-dark">{{ show.delayWatch }}</span>{% endif %}
 
         </div>
         <p class="card-text">

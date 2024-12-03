@@ -72,12 +72,12 @@ def home(request, view_type):
         show_data = data
         flag = False
     elif view_type == 'upcoming':
-        data = [show for show in show_data if show.next_episode and (show.next_episode.firstAired and show.next_episode.firstAired > time.date())]
+        data = [show for show in show_data if show.next_episode and (show.next_episode.firstAired and show.next_episode.firstAired >= time.date() - timedelta(days=show.delayWatch))]
         data = sorted(data, key=lambda x: x.next_episode.firstAired)
         show_data = data
         flag = True
     else:
-        data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching]
+        data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching and show.next_episode.firstAired + timedelta(days=show.delayWatch) <= time.date()]
         for show in data:
             show.watched_pct = show.episode_watch_count / show.total_episodes * 100
         show_data = data
@@ -186,7 +186,8 @@ def single_show(request, show_slug):
     show = Show.objects.get(user=user, slug__iexact = show_slug)
     next_episode = show.next_episode
     watched_pct = show.episode_watch_count / show.total_episodes * 100
-    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct })
+    time_obj = datetime.strptime(show.airsTime, "%H:%M").time()
+    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj })
 
 @login_required(login_url='/login')
 def episode_swt(request):
@@ -340,3 +341,17 @@ def stop(request):
             except:
                 return HttpResponseRedirect('/')
     return HttpResponseRedirect('/')
+
+@login_required(login_url='/login')
+def set_watch_delay(request):
+        if request.method == 'POST':
+            user_id = request.user.id
+            user = User.objects.get(id=user_id)
+            show_id = request.POST.get('show_id')
+            show = Show.objects.get(user=user, id=show_id)
+            if show:
+                new_delay = request.POST.get('new_delay')
+                show.delayWatch = new_delay
+                show.save()
+                return HttpResponseRedirect('/show/%s'%show.slug)
+        return HttpResponseRedirect('/')

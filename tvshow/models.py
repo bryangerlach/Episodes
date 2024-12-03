@@ -28,6 +28,9 @@ class Show(models.Model):
 	watch_later = models.BooleanField(default = False)
 	stopped_watching = models.BooleanField(default = False)
 	language = models.CharField(max_length=10, default='eng')
+	airsDays = models.JSONField(default=dict)
+	airsTime = models.CharField(max_length=10, null=True)
+	delayWatch = models.IntegerField(default=0) #how many days to delay showing on "watch next", ex: you watch on a streaming service that makes the show available x days after it airs
 
 	def __str__(self):
 		return self.seriesName
@@ -35,6 +38,13 @@ class Show(models.Model):
 	def add_show(self, data, runningStatus, user):
 		self.user = user
 		self.language = data['originalLanguage']
+		if runningStatus == 'Continuing':
+			try:
+				self.airsDays = data['airsDays']
+				self.airsTime = data['airsTime']
+			except:
+				pass
+		self.delayWatch = 0
 		if self.language != 'eng':
 			t = get_series_translation(data['id'],'eng')
 			self.seriesName = t['name']
@@ -104,8 +114,14 @@ class Show(models.Model):
 	def update_show_data(self,season_to_update):
 		flag = False
 		tvdbID = self.tvdbID
-		show_online_data = get_series(tvdbID)
+		show_online_data = get_series_with_id(tvdbID)
 		self.banner = show_online_data['image']
+		if self.runningStatus == 'Continuing':
+			try:
+				self.airsDays = show_online_data['airsDays']
+				self.airsTime = show_online_data['airsTime']
+			except:
+				pass
 		self.save()
 		if season_to_update == '0':
 			current_season = self.season_set.all().last()

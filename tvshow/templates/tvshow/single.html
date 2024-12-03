@@ -10,9 +10,24 @@
           <h3 class="card-title text-xs-center">{{show.seriesName}}<small class="text-muted"> ({{show.network}})</small>
           </h3>
         </a>
+        {% if show.runningStatus == 'Continuing' %}
+          {% for day, is_active in show.airsDays.items %}
+              {% if is_active %}
+                  {{ day|capfirst }}
+              {% endif %}
+          {% endfor %}
+          <br>{{time|date:"h:i A"}}<br>
+        {% endif %}
+
         {% for genre in show.get_genres %}
         <span class="badge rounded-pill bg-info text-center">{{genre.name}}</span>
         {% endfor %}
+        <br>
+        <br>
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target=".watch-delay">Set Watch Delay</button>
+        {% if show.delayWatch != 0 %}
+        <br>Current Delay Days: {{ show.delayWatch }}
+        {% endif %}
         <br>
         <br>
         {% if show.is_watched %}
@@ -96,6 +111,31 @@
           Season {{season.number}} <small> Watched {{season.watch_count}} of {{season.episode_count}} episodes.</small>
         </a>
         {% endfor %}
+      </div>
+    </div>
+
+    <div class="modal fade watch-delay" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content text-xs-center">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Set Watch Delay</h4>
+          </div>
+          <form action="/set_watch_delay" method="post">{% csrf_token %}
+            <div class="modal-body">
+              <div class="input-group">
+                <span class="input-group-addon" id="basic-addon3">Delay in Days: </span>
+                <input type="number" class="form-control" name="new_delay" aria-describedby="basic-addon3" max=100 min=0
+                  step=1.0 value="{{show.watchDelay}}">
+                <input type="hidden" value={{show.id}} name='show_id'>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Save changes</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
