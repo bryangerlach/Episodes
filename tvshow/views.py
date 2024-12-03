@@ -186,7 +186,10 @@ def single_show(request, show_slug):
     show = Show.objects.get(user=user, slug__iexact = show_slug)
     next_episode = show.next_episode
     watched_pct = show.episode_watch_count / show.total_episodes * 100
-    time_obj = datetime.strptime(show.airsTime, "%H:%M").time()
+    if show.airsTime:
+        time_obj = datetime.strptime(show.airsTime, "%H:%M").time()
+    else:
+        time_obj = None
     return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj })
 
 @login_required(login_url='/login')
