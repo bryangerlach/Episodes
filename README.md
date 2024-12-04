@@ -8,6 +8,19 @@ Forked from https://github.com/guptachetan1997/Episodes
 
 Inspired from https://github.com/jamienicol/episodes
 
+## Android app
+
+You can download the android app from [here](https://github.com/bryangerlach/episodes-android/releases/tag/latest). It is a simple webview app and you will enter your url when the app opens (make sure to have a '/' at the end of your url like https://example.com/).
+
+## Features
+
+* add tv shows to track when new episodes come out
+* mark tv show episodes as watched
+* mark shows as "Stopped Watching" or "Watch Later" (these shows will not show up in your Watch Next feed)
+* Watch Next, Upcoming, History, Watch Later, and Stopped Watching
+* Set up a "Watch Delay" for shows that you want to show in your Watch Next feed x days after release (if you watch on streaming and it releases 1 day later, set this to 1)
+* Get show and episode overviews
+
 ## Install using Docker Compose
 
 1. Download the docker-compose.yml file to your computer
