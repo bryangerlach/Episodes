@@ -116,6 +116,7 @@ class Show(models.Model):
 		tvdbID = self.tvdbID
 		show_online_data = get_series_with_id(tvdbID)
 		self.banner = show_online_data['image']
+		self.network = show_online_data['latestNetwork']['name']
 		if self.runningStatus == 'Continuing':
 			try:
 				self.airsDays = show_online_data['airsDays']
