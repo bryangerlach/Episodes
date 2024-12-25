@@ -65,7 +65,10 @@ class Show(models.Model):
 				self.imdbID = data['remoteIds'][i]['id']
 		self.tvdbID = data['id']
 		#self.siteRating = data['score']
-		self.network = data['originalNetwork']['name']
+		try:
+			self.network = data['originalNetwork']['name']
+		except:
+			self.network = "unknown"
 		self.runningStatus = runningStatus
 		self.genre_list = json.dumps(data['genres'])
 		self.last_updated = timezone.now()
@@ -116,7 +119,10 @@ class Show(models.Model):
 		tvdbID = self.tvdbID
 		show_online_data = get_series_with_id(tvdbID)
 		self.banner = show_online_data['image']
-		self.network = show_online_data['latestNetwork']['name']
+		try:
+			show.network = show_data['latestNetwork']['name']
+		except:
+			pass
 		if self.runningStatus == 'Continuing':
 			try:
 				self.airsDays = show_online_data['airsDays']

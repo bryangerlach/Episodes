@@ -11,7 +11,10 @@ def update_db_cron():
             flag = show.update_show_data("0")
             show.last_updated = timezone.now()
             show_data = get_series_with_id(int(show.tvdbID))
-            show.network = show_data['latestNetwork']['name']
+            try:
+                show.network = show_data['latestNetwork']['name']
+            except:
+                pass
             show.save()
             if flag:
                 print('%s has been updated.'%show.seriesName)
