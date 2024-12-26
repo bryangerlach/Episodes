@@ -120,7 +120,7 @@ class Show(models.Model):
 		show_online_data = get_series_with_id(tvdbID)
 		self.banner = show_online_data['image']
 		try:
-			show.network = show_data['latestNetwork']['name']
+			self.network = show_online_data['latestNetwork']['name']
 		except:
 			pass
 		if self.runningStatus == 'Continuing':
