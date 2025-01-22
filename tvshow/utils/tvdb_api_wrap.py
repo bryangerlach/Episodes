@@ -14,10 +14,16 @@ else:
 tvdb = tvdb_v4_official.TVDB("5f83a2b4-0f01-4d4d-9ffd-62e5c1779ea9")
 
 def search_series_list(series_name):
-	return tvdb.search(series_name)
+	return tvdb.search(series_name,type="series")
+
+def search_movie_list(movie_name):
+	return tvdb.search(movie_name,type="movie")
 
 def get_series_with_id(tvdbID):
 	return tvdb.get_series_extended(tvdbID)
+
+def get_movie_with_id(tvdbID):
+	return tvdb.get_movie_extended(tvdbID)
 
 def get_season_episode_list(tvdbID, number):
 	series = tvdb.get_series_extended(tvdbID)

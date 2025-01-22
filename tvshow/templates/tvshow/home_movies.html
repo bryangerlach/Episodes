@@ -1,0 +1,67 @@
+{% extends "tvshow/header.html" %}
+{% load mathfilters %}
+{% block content %}
+<div class="container">
+  <h1>
+    {% if view_type == 'movies' %}
+        Watch Next
+    {% elif view_type == 'movies_history' %}
+        Seen Movies
+    {% else %}
+        All Movies
+    {% endif %}
+  </h1>
+  {% for movie in movie_data %}
+  <div class="card mb-2" style="max-width: 540px;">
+    <div class="row g-0 align-items-start">
+      <div class="col-4 col-sm-3">
+        <a href='/movie/{{movie.slug}}'>
+          <img class="img-fluid rounded-start" src="{{movie.image_url}}" alt="{{movie.name}}" width="100px">
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card-title">
+          {{movie.name}}
+        </div>
+        <p class="card-text">
+          <small class="text-body-secondary">{{movie.overview}}</small>
+        </p>
+      </div>
+      <div class="col-1 col-md-1 align-self-center">
+        <form class='form-inline' action="/movie_swt" method="post">{% csrf_token %}
+          <input type="hidden" name="movie_swt" value="{{movie.id}}">
+          <input type="hidden" name="home" value="home">
+          {% if movie.status_watched %}
+            <input type="checkbox" onclick="this.form.submit();" checked>
+          {% else %}
+            <input type="checkbox" onclick="this.form.submit();">
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if messages %}
+<div class="modal fade" id="messages" tabindex="-1" role="dialog" aria-labelledby="messagesLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title text-xs-center" id="myModalLabel">Updates</h4>
+      </div>
+      <div class="modal-body">
+        {% for message in messages %}
+        <div class="alert alert-success" role="alert">
+          {{message}}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

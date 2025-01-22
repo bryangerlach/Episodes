@@ -1,0 +1,34 @@
+{% extends 'tvshow/header.html' %}
+
+{% block content %}
+<div class="container">
+<div class="row text-xs-center">
+  <form class="form-inline" method="post" action="/add_search_movie">{% csrf_token %}
+    <div class="form-group">
+      <input type="text" class="form-control" name="search_string" placeholder="Movie Name">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+</div>
+</div>
+<br><br>
+{% if context.Flag %}
+<div class="container">
+    {% for movie in context.movie_datalist %}
+    <div class="card" style="max-width: 300px;">
+      <img class="card-img-top" src="{{movie.image_url}}" alt="Card image cap" width="300px">
+      <div class="card-body">
+        <h5 class="card-title">{{movie.name}}</h5>
+        <p class="card-text">{{movie.overview}}</p>
+        <p class="card-text"><small class="text-muted">Released {{movie.year}}</small></p>
+        <form class='form-inline' action="/add_movie" method="post">{% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary">Add</button>
+          <input type="hidden" name="movie_id" value="{{movie.tvdb_id}}">
+          <input type="hidden" name="overview" value="{{movie.overview}}">
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -316,3 +316,58 @@ class Episode(models.Model):
 			except:
 				pass
 		self.save()
+
+class Movie(models.Model):
+	id = models.AutoField(primary_key=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+	tvdbID = models.CharField(max_length=50)
+	name = models.CharField(max_length=100)
+	image_url = models.CharField(max_length=150, null=True, blank=True)
+	overview = models.TextField()
+	imdbID = models.CharField(max_length=50, null=True, blank=True)
+	status_watched = models.BooleanField(default=False)
+	date_watched = models.DateField(null=True, blank=True)
+	slug = models.SlugField(null = True, blank = True)
+	thumbnail = models.CharField(max_length=150, null=True, blank=True)
+	country = models.CharField(max_length=50)
+	director = models.CharField(max_length=50)
+	studio = models.CharField(max_length=50)
+	genre_list = models.TextField(null=True, blank=True)
+	status = models.CharField(max_length=50)
+	year = models.CharField(max_length=4)
+	runtime = models.IntegerField(null=True,default=0)
+
+	def __str__(self):
+		return self.name
+
+	def add_movie(self, data, overview, user):
+		self.user = user
+		self.tvdbID = data['id']
+		self.name = data['name']
+		for i in range(len(data['remoteIds'])):
+			if data['remoteIds'][i]['sourceName'] == 'IMDB':
+				self.imdbID = data['remoteIds'][i]['id']
+		self.overview = overview
+		self.slug = data['slug']
+		self.image_url = data['image']
+		self.genre_list = json.dumps(data['genres'])
+		#self.country = data['country']
+		#self.director = data['director']
+		#self.studio = data['studio']
+		self.status = data['status']['name']
+		self.year = data['year']
+		self.runtime = data['runtime']
+		self.save()
+
+	def wst(self):
+		if self.status_watched:
+			self.status_watched = False
+			self.date_watched = None
+		else:
+			self.status_watched = True
+			self.date_watched = timezone.now()
+		self.save()
+
+	@property
+	def get_genres(self):
+		return json.loads(self.genre_list)

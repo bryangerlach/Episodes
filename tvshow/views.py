@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
-from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation
-from .models import Show,Season,Episode
+from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id
+from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
 from datetime import timedelta, datetime
@@ -85,6 +85,19 @@ def home(request, view_type):
     return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
 
 @login_required(login_url='/login')
+def movies(request, view_type):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    movie_data = user.movie_set.all()
+    if view_type == 'movies':
+        movie_data = [movie for movie in movie_data if not movie.status_watched]
+    elif view_type == 'movies_history':
+        movie_data = [movie for movie in movie_data if movie.status_watched]
+    else:
+        movie_data = movie_data
+    return render(request, 'tvshow/home_movies.html', {'movie_data':movie_data, 'view_type':view_type})
+
+@login_required(login_url='/login')
 def history(request):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
@@ -153,6 +166,26 @@ def add(request):
     return HttpResponseRedirect('/all')
 
 @login_required(login_url='/login')
+def add_movie(request):
+    if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        slug = ''
+        tvdbID = request.POST.get('movie_id')
+        overview = request.POST.get('overview')
+        try :
+            movie = Movie.objects.get(user_id=user_id, tvdbID=tvdbID)
+            slug = movie.slug
+        except:
+            movie_data = get_movie_with_id(int(tvdbID))
+            if movie_data is not None:
+                movie = Movie()
+                movie.add_movie(movie_data, overview, user)
+                slug = movie.slug
+        return HttpResponseRedirect('/movie/%s'%slug)
+    return HttpResponseRedirect('/all')
+
+@login_required(login_url='/login')
 def add_search(request):
     context = {}
     context['Flag'] = False
@@ -180,6 +213,20 @@ def add_search(request):
     return render(request, 'tvshow/add_search.html', {'context':context})
 
 @login_required(login_url='/login')
+def add_search_movie(request):
+    context = {}
+    context['Flag'] = False
+    if request.method == 'POST':
+        search_string = request.POST.get('search_string')
+        movie_datalist_full = search_movie_list(search_string)
+        movie_datalist = movie_datalist_full[:10]
+        if movie_datalist is not None:
+            context['Flag'] = True
+            context['movie_datalist'] = movie_datalist
+        
+    return render(request, 'tvshow/add_search_movie.html', {'context':context})
+
+@login_required(login_url='/login')
 def single_show(request, show_slug):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
@@ -191,6 +238,14 @@ def single_show(request, show_slug):
     else:
         time_obj = None
     return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj })
+
+@login_required(login_url='/login')
+def single_movie(request, movie_slug):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    movie = Movie.objects.get(user=user, slug__iexact = movie_slug)
+    
+    return render(request, 'tvshow/single_movie.html', {'movie':movie})
 
 @login_required(login_url='/login')
 def episode_swt(request):
@@ -222,6 +277,22 @@ def season_swt(request):
             season.wst()
             show = season.show
             return HttpResponseRedirect('/show/%s'%show.slug)
+    return HttpResponseRedirect('/all')
+
+@login_required(login_url='/login')
+def movie_swt(request):
+    if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        movie_id = request.POST.get('movie_swt')
+        movie = Movie.objects.get(user=user,id = movie_id)
+        from_home = request.POST.get('home','')
+        if movie:
+            movie.wst()
+            if from_home == 'home':
+                return HttpResponseRedirect('/movies')
+            else:
+                return HttpResponseRedirect('/movie/%s'%movie.slug)
     return HttpResponseRedirect('/all')
 
 @login_required(login_url='/login')
@@ -265,6 +336,21 @@ def delete_show(request):
             try:
                 show = Show.objects.get(user=user, id=show_id)
                 show.delete()
+                return HttpResponseRedirect('/')
+            except:
+                return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
+
+@login_required(login_url='/login')
+def delete_movie(request):
+    if request.method == 'POST':
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        movie_id = request.POST.get('movie_id')
+        if movie_id:
+            try:
+                movie = Movie.objects.get(user=user, id=movie_id)
+                movie.delete()
                 return HttpResponseRedirect('/')
             except:
                 return HttpResponseRedirect('/')
