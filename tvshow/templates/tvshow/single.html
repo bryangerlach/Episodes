@@ -87,7 +87,8 @@
         {% if not show.stopped_watching %}
         <br><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target=".stop-watching">Stop Watching</button>
         {% endif %}
-        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target=".delete-show">Delete</button><br>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target=".delete-show">Delete</button><br><br>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target=".refresh">Refresh Show Data</button><br>
       </div>
     </div>
 
@@ -296,6 +297,29 @@
         <div class="modal-footer text-xs-center">
           <button type="button" class="btn btn-success" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-danger">Stop Watching</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade refresh" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-xs-center">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Refresh Show Data</h4>
+      </div>
+      <form action="/refresh_show" method="post">{% csrf_token %}
+        <div class="modal-body">
+          <p>
+            {{show.seriesName}} data will be completely refreshed. This will delete all metadata, then recreate it. Your watched history will be saved.
+          </p>
+          <input type="hidden" value={{show.id}} name='show_id'>
+        </div>
+        <div class="modal-footer text-xs-center">
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Refresh Show Data</button>
         </div>
       </form>
     </div>

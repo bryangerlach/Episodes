@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('updating database')
-        show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)))
+        show_list = Show.objects.filter(Q(last_updated__lte=timezone.now()-timedelta(days=7))).exclude(runningStatus="Ended")
         for show in show_list:
             try:
                 flag = show.update_show_data("0")

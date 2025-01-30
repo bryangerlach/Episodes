@@ -308,10 +308,34 @@ def search(request):
     return HttpResponseRedirect('/all')
 
 @login_required(login_url='/login')
+def refresh_all_continuing(request):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    #show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)),user=user)
+    show_list = Show.objects.filter(user=user).exclude(runningStatus="Ended")
+    for show in show_list:
+        flag = show.refresh_show_data()
+        if flag:
+            messages.success(request, '%s has been refreshed.'%show.seriesName)
+            print('%s has been refreshed.'%show.seriesName)
+    return HttpResponseRedirect('/')
+
+@login_required(login_url='/login')
+def refresh_show(request):
+    if request.method == "POST":
+        show_id = request.POST.get('show_id')
+        show = Show.objects.get(id=show_id)
+        flag = show.refresh_show_data()
+        if flag:
+            #messages.success(request, '%s has been refreshed.'%show.seriesName)
+            print('%s has been refreshed.'%show.seriesName)
+    return HttpResponseRedirect('/show/%s'%show.slug)
+
+@login_required(login_url='/login')
 def update_all_continuing(request):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
-    show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)),user=user)
+    show_list = Show.objects.filter(Q(last_updated__lte=timezone.now()-timedelta(days=7)),user=user).exclude(runningStatus="Ended")
     for show in show_list:
         flag = show.update_show_data("0")
         show.last_updated = timezone.now()

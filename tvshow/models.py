@@ -1,5 +1,6 @@
 from django.db import models
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Q
@@ -113,6 +114,38 @@ class Show(models.Model):
 	@property
 	def next_episode(self):
 		return Episode.objects.filter(Q(season__show=self),Q(status_watched=False)).first()
+	
+	def refresh_show_data(self):
+		flag = False
+		if self.is_watched:
+			mark_watched_date = datetime.now().date() + timedelta(days=-1)
+		else:
+			mark_watched_date = self.next_episode.firstAired + timedelta(days=-1)
+		tvdbID = self.tvdbID
+		runningStatus = self.runningStatus
+		user = self.user
+		self.delete()
+		show_data = get_series_with_id(int(tvdbID))
+		if show_data is not None:
+			show = Show()
+			show.add_show(show_data, runningStatus, user)
+			slug = show.slug
+			seasons_data = get_all_episodes(int(tvdbID), 1)
+			for i in range(len(seasons_data)):
+				string = 'Season' + str(i+1)
+				season_data = seasons_data[string]
+				season = Season()
+				season.add_season(show, i+1)
+				season_episodes_data = seasons_data[string]
+				for season_episode in season_episodes_data['episodes']:
+					#print(season_episode)
+					if season_episode['name']:
+						episode = Episode()
+						episode.add_episode(season, season_episode)
+						if episode.firstAired:
+							if episode.firstAired < mark_watched_date:
+								episode.wst()
+		return HttpResponseRedirect('/show/%s'%slug)
 
 	def update_show_data(self,season_to_update):
 		flag = False
@@ -131,7 +164,7 @@ class Show(models.Model):
 				pass
 		self.save()
 		if season_to_update == '0':
-			current_season = self.season_set.all().last()
+			current_season = self.season_set.all().last()	
 		else:
 			current_season = self.season_set.get(number=season_to_update)
 		current_season_db_data = current_season.episode_set.all()

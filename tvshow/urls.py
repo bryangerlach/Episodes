@@ -3,6 +3,8 @@ from tvshow import views as views
 urlpatterns = [
     url(r'^(?P<view_type>|all|watch_later|stopped_watching|upcoming||)$', views.home),
     url(r'^update_all_shows', views.update_all_continuing),
+    url(r'^refresh_all_continuing', views.refresh_all_continuing),
+    url(r'^refresh_show', views.refresh_show),
     url(r'^update_show', views.update_show),
     url(r'^delete_show', views.delete_show),
     url(r'^delete_movie', views.delete_movie),
