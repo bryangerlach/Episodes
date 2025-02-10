@@ -128,9 +128,9 @@
       <div class="list-group list-group-flush">
         {% for rec in recommended %}
           {% if rec.wUrl != None %}
-            <a class="list-group-item" href="{{rec.wUrl}}">{{rec.name}}
+            <a class="list-group-item" href="{{rec.wUrl}}">{{rec.name}}</a>
           {% else %}
-            {{rec.name}}
+            <div class="list-group-item">{{rec.name}}</div>
           {% endif %}
         {% endfor %}
       </div>
