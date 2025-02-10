@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id
+from .utils.tastedive_api_wrap import get_recommendations
 from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
@@ -228,6 +229,10 @@ def add_search_movie(request):
 
 @login_required(login_url='/login')
 def single_show(request, show_slug):
+    if 'rec_flag' in request.POST:
+        rec_flag = request.POST['rec_flag']
+    else:
+        rec_flag = False
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     show = Show.objects.get(user=user, slug__iexact = show_slug)
@@ -237,7 +242,12 @@ def single_show(request, show_slug):
         time_obj = datetime.strptime(show.airsTime, "%H:%M").time()
     else:
         time_obj = None
-    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj })
+    if rec_flag:
+        get_recommended = get_recommendations(show.seriesName,'show')
+        recommended = get_recommended["similar"]["results"]
+    else:
+        recommended = {}
+    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj, 'rec_flag':rec_flag, 'recommended':recommended })
 
 @login_required(login_url='/login')
 def single_movie(request, movie_slug):

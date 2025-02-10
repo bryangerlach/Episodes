@@ -115,6 +115,27 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="card-header">
+        <div class="d-grid gap-2 d-md-flex">
+          <form action="/show/{{show.slug}}" method="post">{% csrf_token %}
+            <input type="hidden" value={{show.slug}} name='show_slug'>
+            <input type="hidden" value=True name='rec_flag'>
+            <button type="submit" class="btn btn-success">List Similar Shows</button>
+          </form>
+        </div>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for rec in recommended %}
+          {% if rec.wUrl != None %}
+            <a class="list-group-item" href="{{rec.wUrl}}">{{rec.name}}
+          {% else %}
+            {{rec.name}}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="modal fade watch-delay" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
       aria-hidden="true">
       <div class="modal-dialog modal-sm">
