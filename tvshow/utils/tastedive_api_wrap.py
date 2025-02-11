@@ -5,9 +5,9 @@ API_KEY = "1045953-Episodes-D63C45BA"  # Replace with your actual API key
 BASE_URL = "https://tastedive.com/api/similar"
 
 def get_recommendations(query, media_type, limit=5, info=1):
-    query = clean_query(query)
+    cleaned_query = clean_query(query)
     params = {
-        "q": query,
+        "q": cleaned_query,
         "type": media_type,
         "k": API_KEY,
         "limit": limit,
@@ -30,6 +30,7 @@ def clean_query(query):
     The cleaned query string.
   """
   # Replace spaces with "+"
+  cleaned_query = query.replace("%2B", "+")
   cleaned_query = query.replace(" ", "+")
 
   # Remove all special characters

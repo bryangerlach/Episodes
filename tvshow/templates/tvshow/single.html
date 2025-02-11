@@ -1,6 +1,24 @@
 {% extends 'tvshow/header.html' %}
 
 {% block content %}
+<style>
+    /* CSS for your spinner */
+    .spinner {
+        border: 4px solid #f3f3f3; /* Light grey */
+        border-top: 4px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite; /* Animate the spinner */
+        margin: 0 auto; /* Center the spinner */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
 <div class="container">
   <div class="card-group">
     <div class="card mb-1">
@@ -118,20 +136,16 @@
     <div class="card">
       <div class="card-header">
         <div class="d-grid gap-2 d-md-flex">
-          <form action="/show/{{show.slug}}" method="post">{% csrf_token %}
+          <form action="/show/{{show.slug}}" method="post" id="similarForm">{% csrf_token %}
             <input type="hidden" value={{show.slug}} name='show_slug'>
             <input type="hidden" value=True name='rec_flag'>
-            <button type="submit" class="btn btn-success">List Similar Shows</button>
+            <button type="submit" class="btn btn-success" id="siimilarBtn">List Similar Shows</button>
           </form>
         </div>
       </div>
-      <div class="list-group list-group-flush">
+      <div class="list-group list-group-flush" id="similarShows">
         {% for rec in recommended %}
-          {% if rec.wUrl != None %}
-            <a class="list-group-item" href="{{rec.wUrl}}">{{rec.name}}</a>
-          {% else %}
-            <div class="list-group-item">{{rec.name}}</div>
-          {% endif %}
+            <a class=list-group-item target="_blank" href="https://www.imdb.com/title/{{rec.imdbID}}">{{rec.name}}<br><img class="card-img-top mx-auto" src="{{rec.image_url}}" alt="Card image cap" style="width: 200px;"><br>{{rec.overview}}</a>
         {% endfor %}
       </div>
     </div>
@@ -346,6 +360,17 @@
     </div>
   </div>
 </div>
+
+<script>
+    window.onload = function() {
+        {% if recommended and recommended|length > 0 %}
+            const newDataSection = document.getElementById('similarShows');
+            if (newDataSection) {
+                newDataSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        {% endif %}
+    };
+</script>
 
 {% for season in show.season_set.all %}
 {% include 'tvshow/single_season_modal_snippet.html' with season=season %}
