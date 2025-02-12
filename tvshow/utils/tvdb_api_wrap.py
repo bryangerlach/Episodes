@@ -67,8 +67,10 @@ def get_image_from_search(series_name):
 	query = tvdb.search(series_name,type="series")
 	image_link = query[0]['image_url']
 	overview = query[0]['overview']
+	tvdb_id = query[0]['tvdb_id']
+	status = query[0]['status']
 	imdbID = ""
 	for rid in query[0]['remote_ids']:
 		if rid['sourceName'] == "IMDB":
 			imdbID = rid['id']
-	return image_link, overview, imdbID
+	return image_link, overview, imdbID, tvdb_id, status

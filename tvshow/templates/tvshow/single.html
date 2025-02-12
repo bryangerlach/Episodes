@@ -145,7 +145,15 @@
       </div>
       <div class="list-group list-group-flush" id="similarShows">
         {% for rec in recommended %}
-            <a class=list-group-item target="_blank" href="https://www.imdb.com/title/{{rec.imdbID}}">{{rec.name}}<br><img class="card-img-top mx-auto" src="{{rec.image_url}}" alt="Card image cap" style="width: 200px;"><br>{{rec.overview}}</a>
+          <div class=list-group-item>
+            <a target="_blank" href="https://www.imdb.com/title/{{rec.imdbID}}">{{rec.name}}<br><img class="card-img-top mx-auto" src="{{rec.image_url}}" alt="Card image cap" style="width: 200px;"></a>
+            <br>{{rec.overview}}
+            <form class='form-inline' action="/add" method="post">{% csrf_token %}
+              <button type="submit" class="btn btn-outline-primary">Add</button>
+              <input type="hidden" name="show_id" value="{{rec.tvdb_id}}">
+              <input type="hidden" name="runningStatus" value="{{rec.status}}">
+            </form>
+          </div>
         {% endfor %}
       </div>
     </div>

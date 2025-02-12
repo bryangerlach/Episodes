@@ -247,7 +247,7 @@ def single_show(request, show_slug):
         recommended = get_recommended["similar"]["results"]
         for rec in recommended:
             try:
-                rec['image_url'], rec['overview'], rec['imdbID'] = get_image_from_search(rec['name'])
+                rec['image_url'], rec['overview'], rec['imdbID'], rec['tvdb_id'], rec['status'] = get_image_from_search(rec['name'])
             except:
                 print("No image for show")
                 
