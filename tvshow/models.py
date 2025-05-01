@@ -174,7 +174,7 @@ class Show(models.Model):
 			for db_episode,oln_episode in zip(current_season_db_data, current_season_oln_data['episodes']):
 				db_episode.compare_or_update(oln_episode)
 				counter+=1
-			if counter < len(current_season_oln_data):
+			if counter < len(current_season_oln_data['episodes']):
 				for new_episode in current_season_oln_data['episodes'][counter:]:
 					if new_episode['name'] == "":
 						new_episode['name'] = 'TBA'
