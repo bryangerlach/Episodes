@@ -192,9 +192,13 @@ class Show(models.Model):
 				season_episodes_data = new_seasons[string]
 				flag=True
 				for season_episode in season_episodes_data:
-					if season_episode['name']:
-						episode = Episode()
-						episode.add_episode(season, season_episode)
+					try:
+						if season_episode['name']:
+							episode = Episode()
+							episode.add_episode(season, season_episode)
+					except:
+						pass
+
 		return flag
 	
 	def update_imdb(self):
