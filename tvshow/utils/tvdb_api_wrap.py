@@ -11,7 +11,7 @@ if six.PY2:
 else:
 	from urllib.parse import quote
 
-tvdb = tvdb_v4_official.TVDB("84321522-dd13-4ad0-affc-11fbc2aa9768")
+tvdb = tvdb_v4_official.TVDB("67322ef0-b51d-41b2-8af6-fcc3d07b1c1e")
 
 def search_series_list(series_name):
 	return tvdb.search(series_name,type="series")
