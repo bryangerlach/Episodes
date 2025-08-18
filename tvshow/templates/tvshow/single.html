@@ -84,6 +84,9 @@
           <div class="collapse" id="collapseE{{next_episode.number}}">
             <div class="card-block card-inverse card-danger">
               <p class="card-text">
+                {% if next_episode.imdbID != None %}
+                  <a target="_blank" href="https://www.imdb.com/title/{{next_episode.imdbID}}">IMDB</a><br>
+                {% endif %}
                 {{next_episode.overview}}
               </p>
             </div>
