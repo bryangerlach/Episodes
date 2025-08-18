@@ -273,6 +273,7 @@ class Episode(models.Model):
 	firstAired = models.DateField(null=True, blank = True)
 	date_watched = models.DateField(null=True, blank=True)
 	tvdbID = models.CharField(max_length=50)
+	imdbID = models.CharField(max_length=50, null=True, blank=True)
 	overview = models.TextField(null=True, blank=True)
 	status_watched = models.BooleanField(default=False)
 	episodeImage = models.CharField(max_length=150, null=True, blank=True)
@@ -350,6 +351,14 @@ class Episode(models.Model):
 			try:
 				t = get_episode(self.tvdbID)
 				self.episodeImage = t['image']
+			except:
+				pass
+		if self.imdbID is None:
+			try:
+				t = get_episode_extended(self.tvdbID)
+				for i in range(len(t['remoteIds'])):
+					if t['remoteIds'][i]['sourceName'] == 'IMDB':
+						self.imdbID = t['remoteIds'][i]['id']
 			except:
 				pass
 		self.save()

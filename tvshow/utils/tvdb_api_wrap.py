@@ -81,6 +81,10 @@ def get_episode(episodeID):
 	tvdb = get_tvdb_client()
 	return tvdb.get_episode(episodeID)
 
+def get_episode_extended(episodeID):
+	tvdb = get_tvdb_client()
+	return tvdb.get_episode_extended(episodeID)
+
 def get_series(tvdbID):
 	tvdb = get_tvdb_client()
 	return tvdb.get_series(tvdbID)

@@ -13,6 +13,9 @@
       <div class="modal-body">
             <div class="card card-block card-inverse card-danger">
               <p class="card-text">
+                {% if episode.imdbID != None %}
+                  <a target="_blank" href="https://www.imdb.com/title/{{episode.imdbID}}">IMDB</a><br>
+                {% endif %}
                 {{episode.overview}}
               </p>
             </div>
