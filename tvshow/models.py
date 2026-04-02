@@ -171,16 +171,26 @@ class Show(models.Model):
 		current_season_oln_data = get_season_episode_list(tvdbID, current_season.number)
 		counter = 0
 		if current_season_oln_data:
-			for db_episode,oln_episode in zip(current_season_db_data, current_season_oln_data['episodes']):
-				db_episode.compare_or_update(oln_episode)
-				counter+=1
-			if counter < len(current_season_oln_data['episodes']):
-				for new_episode in current_season_oln_data['episodes'][counter:]:
-					if new_episode['name'] == "":
-						new_episode['name'] = 'TBA'
-					episode = Episode()
-					episode.add_episode(current_season,new_episode)
-					flag=True
+			oln_episodes = current_season_oln_data['episodes']
+			active_episode_ids = []
+			for oln_episode in oln_episodes:
+				tvdb_id_str = str(oln_episode['id'])
+				db_episode = current_season_db_data.filter(tvdbID=tvdb_id_str).first()
+				if db_episode:
+					db_episode.compare_or_update(oln_episode)
+					active_episode_ids.append(db_episode.id)
+				else:
+					if oln_episode.get('name') == "":
+						oln_episode['name'] = 'TBA'
+					new_episode = Episode()
+					new_episode.add_episode(current_season, oln_episode)
+					new_episode.tvdbID = tvdb_id_str
+					new_episode.save()
+					active_episode_ids.append(new_episode.id)
+					flag = True
+
+			# delete any episode in the DB that wasn't found in the online 'episodes' list
+			current_season_db_data.exclude(id__in=active_episode_ids).delete()
 		if season_to_update == '0':
 			range_starter = current_season.number + 1
 			new_seasons = get_all_episodes(tvdbID, range_starter)
