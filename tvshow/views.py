@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id, get_image_from_search
-from .utils.tastedive_api_wrap import get_recommendations
+from .utils.recs_api_wrap import get_recommendations
 from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
