@@ -61,30 +61,104 @@ def home(request, view_type):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     time = datetime.now()
-    show_data = user.show_set.all().order_by('-modified')
+    
+    # Base queryset for the user's shows
+    shows = user.show_set.all().order_by('-modified')
+    genre_filter = request.GET.get('genre', '').strip()
+    language_filter = request.GET.get('language', '').strip()
+
+    # Robust helper function with case-insensitive lookup and safe parsing fallbacks
+    def extract_genres(show):
+        if not show.genre_list:
+            return []
+        extracted = []
+        try:
+            raw = show.genre_list
+            if isinstance(raw, str):
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    import ast
+                    data = ast.literal_eval(raw)
+            else:
+                data = raw
+                
+            items = data if isinstance(data, list) else [data]
+            for item in items:
+                if isinstance(item, dict):
+                    name_val = None
+                    for k, v in item.items():
+                        if k.lower() == 'name':
+                            name_val = v
+                            break
+                    if name_val and isinstance(name_val, str):
+                        extracted.append(name_val.strip().title())
+                elif isinstance(item, str):
+                    clean_str = item.strip()
+                    if clean_str:
+                        extracted.append(clean_str.title())
+        except Exception:
+            pass
+        return list(set(extracted))
+
+    # 1. Extract unique clean genres and languages for the dropdowns
+    available_genres = set()
+    available_languages = set()
+    
+    for s in shows:
+        for g in extract_genres(s):
+            available_genres.add(g)
+        if s.language:
+            available_languages.add(s.language.strip())
+            
+    available_genres = sorted(list(available_genres))
+    available_languages = sorted(list(available_languages))
+
+    # 2. Handle View Type filters
     if view_type == 'all':
+        show_data = list(shows)
         flag = False
     elif view_type == 'watch_later':
-        data = [show for show in show_data if show.watch_later]
-        show_data = data
+        show_data = [show for show in shows if show.watch_later]
         flag = False
     elif view_type == 'stopped_watching':
-        data = [show for show in show_data if show.stopped_watching]
-        show_data = data
+        show_data = [show for show in shows if show.stopped_watching]
         flag = False
     elif view_type == 'upcoming':
-        data = [show for show in show_data if show.next_episode and show.next_episode.firstAired and (show.next_episode.firstAired > time.date() - timedelta(days=show.delayWatch))]
-        data = sorted(data, key=lambda x: x.next_episode.firstAired)
-        show_data = data
+        data = [show for show in shows if show.next_episode and show.next_episode.firstAired and (show.next_episode.firstAired > time.date() - timedelta(days=show.delayWatch))]
+        show_data = sorted(data, key=lambda x: x.next_episode.firstAired)
         flag = True
-    else:
-        data = [show for show in show_data if not show.is_watched and not show.watch_later and not show.stopped_watching and show.next_episode.firstAired + timedelta(days=show.delayWatch) <= time.date()]
+    else: # Watch Next view (default)
+        data = [show for show in shows if not show.is_watched and not show.watch_later and not show.stopped_watching and show.next_episode.firstAired + timedelta(days=show.delayWatch) <= time.date()]
         for show in data:
             show.watched_pct = show.episode_watch_count / show.total_episodes * 100
         show_data = data
         flag = True
-    return render(request, 'tvshow/home.html', {'show_data':show_data, 'flag':flag, 'time':time, 'view_type':view_type})
 
+    # 3. Apply Python-side Filters ONLY when viewing 'all'
+    if view_type == 'all':
+        if genre_filter:
+            filtered_shows = []
+            for show in show_data:
+                show_genres = [g.lower() for g in extract_genres(show)]
+                if genre_filter.lower() in show_genres:
+                    filtered_shows.append(show)
+            show_data = filtered_shows
+
+        if language_filter:
+            show_data = [show for show in show_data if show.language and show.language.strip().lower() == language_filter.lower()]
+        
+    return render(request, 'tvshow/home.html', {
+        'show_data': show_data, 
+        'flag': flag, 
+        'time': time, 
+        'view_type': view_type,
+        'genre_filter': genre_filter,
+        'language_filter': language_filter,
+        'available_genres': available_genres,
+        'available_languages': available_languages
+    })
+    
 @login_required(login_url='/login')
 def movies(request, view_type):
     user_id = request.user.id

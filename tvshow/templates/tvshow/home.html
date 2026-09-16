@@ -2,19 +2,65 @@
 {% load mathfilters %}
 {% block content %}
 <div class="container">
-  <h1>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>
+    {% if view_type == 'all' %}
+      All Shows
+    {% elif view_type == 'watch_later' %}
+      Watch Later
+    {% elif view_type == 'stopped_watching' %}
+      Stopped Watching
+    {% elif view_type == 'upcoming' %}
+      Upcoming
+    {% else %}
+      Watch Next
+    {% endif %}
+    </h1>
+  </div>
+
+  <!-- Filters Form (Only shows on non-Watch Next screens) -->
   {% if view_type == 'all' %}
-    All Shows
-  {% elif view_type == 'watch_later' %}
-    Watch Later
-  {% elif view_type == 'stopped_watching' %}
-    Stopped Watching
-  {% elif view_type == 'upcoming' %}
-    Upcoming
-  {% else %}
-    Watch Next
+  <div class="mb-4">
+    <form method="get" action="" class="row g-2 align-items-center">
+      <!-- Genre Filter -->
+      <div class="col-auto">
+        <label for="genre-select" class="col-form-label fw-bold">Genre:</label>
+      </div>
+      <div class="col-auto">
+        <select name="genre" id="genre-select" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Genres</option>
+          {% for genre in available_genres %}
+            <option value="{{ genre }}" {% if genre_filter == genre %}selected{% endif %}>
+              {{ genre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Language Filter -->
+      <div class="col-auto">
+        <label for="language-select" class="col-form-label fw-bold ms-2">Language:</label>
+      </div>
+      <div class="col-auto">
+        <select name="language" id="language-select" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Languages</option>
+          {% for lang in available_languages %}
+            <option value="{{ lang }}" {% if language_filter == lang %}selected{% endif %}>
+              {{ lang|upper }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if genre_filter or language_filter %}
+        <div class="col-auto">
+          <a href="?" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+      {% endif %}
+    </form>
+  </div>
   {% endif %}
-  </h1>
+
   {% for show in show_data %}
   <div class="card mb-2" style="max-width: 540px;">
     <div class="row g-0 align-items-start">
@@ -26,6 +72,7 @@
       {% if flag %}
       <div class="col-6 col-md-3">
         <div class="card-title">
+          
           
           
           {% if view_type == 'upcoming' %}
