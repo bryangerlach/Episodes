@@ -1,7 +1,6 @@
 import os
 import requests
 
-# Fetch the Read Access Token from environment variables
 ACCESS_TOKEN = os.getenv("TMDB_ACCESS_TOKEN")
 BASE_URL = "https://api.themoviedb.org/3"
 
@@ -11,19 +10,14 @@ def get_recommendations(query, media_type='show', limit=5, info=1):
         return {"similar": {"results": []}}
         
     tmdb_type = 'tv' if media_type == 'show' else 'movie'
-    
-    # Set up the Bearer Token authentication headers
     headers = {
         "accept": "application/json",
         "Authorization": f"Bearer {ACCESS_TOKEN}"
     }
     
     try:
-        # Step 1: Search for the show to get its TMDB ID
         search_url = f"{BASE_URL}/search/{tmdb_type}"
-        search_params = {
-            "query": query
-        }
+        search_params = {"query": query, "language": "en-US"}
         search_res = requests.get(search_url, headers=headers, params=search_params)
         search_res.raise_for_status()
         search_data = search_res.json()
@@ -34,18 +28,30 @@ def get_recommendations(query, media_type='show', limit=5, info=1):
             
         item_id = results[0]['id']
         
-        # Step 2: Fetch official recommendations using the TMDB ID
         rec_url = f"{BASE_URL}/{tmdb_type}/{item_id}/recommendations"
-        rec_res = requests.get(rec_url, headers=headers)
+        rec_params = {"language": "en-US"}
+        rec_res = requests.get(rec_url, headers=headers, params=rec_params)
         rec_res.raise_for_status()
         rec_data = rec_res.json()
         
-        # Step 3: Format the results into the exact dictionary structure views.py expects
         formatted_results = []
         for item in rec_data.get('results', [])[:limit]:
             name = item.get('name') if tmdb_type == 'tv' else item.get('title')
+            overview = item.get('overview', '')
+            
+            # Explicit details call if overview is missing or has non-English scripts
+            if (not overview or any(ord(char) > 127 for char in overview[:20])) and item.get('id'):
+                detail_url = f"{BASE_URL}/{tmdb_type}/{item['id']}"
+                detail_res = requests.get(detail_url, headers=headers, params={"language": "en-US"})
+                if detail_res.status_code == 200:
+                    detail_data = detail_res.json()
+                    overview = detail_data.get('overview', overview)
+            
             if name:
-                formatted_results.append({"name": name})
+                formatted_results.append({
+                    "name": name,
+                    "overview": overview
+                })
                 
         return {"similar": {"results": formatted_results}}
         

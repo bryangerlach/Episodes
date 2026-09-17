@@ -209,6 +209,54 @@ def update_show(request):
 #     return HttpResponseRedirect('/')
 
 @login_required(login_url='/login')
+def recommendations_page(request):
+    user_id = request.user.id
+    user = User.objects.get(id=user_id)
+    
+    user_shows = user.show_set.all()
+    user_show_names = set(show.seriesName.lower().strip() for show in user_shows)
+    
+    seed_shows = list(user_shows.order_by('-modified')[:5])
+    
+    recommended_pool = []
+    seen_recommendations = set(user_show_names)
+    
+    for show in seed_shows:
+        rec_data = get_recommendations(show.seriesName, media_type='show', limit=5)
+        
+        for item in rec_data.get("similar", {}).get("results", []):
+            name = item.get("name")
+            tmdb_overview = item.get("overview", "") # English overview straight from TMDB
+            
+            if not name:
+                continue
+                
+            clean_name_lower = name.lower().strip()
+            
+            if clean_name_lower not in seen_recommendations:
+                seen_recommendations.add(clean_name_lower)
+                
+                # Fetch artwork and IDs from TVDB safely without breaking language
+                image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
+                try:
+                    # We only pull image and ids here; we discard TVDB's native-language overview
+                    image_url, _, imdb_id, tvdb_id, status = get_image_from_search(name)
+                except Exception:
+                    pass
+                
+                recommended_pool.append({
+                    'name': name,
+                    'image_url': image_url,
+                    'overview': tmdb_overview if tmdb_overview else tvdb_overview, # Fallback to English TMDB overview
+                    'tvdb_id': tvdb_id,
+                    'status': status
+                })
+
+    return render(request, 'tvshow/recommendations.html', {
+        'recommended_shows': recommended_pool
+    })
+
+@login_required(login_url='/login')
 def add(request):
     if request.method == 'POST':
         user_id = request.user.id

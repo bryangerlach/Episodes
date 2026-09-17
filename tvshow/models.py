@@ -38,7 +38,7 @@ class Show(models.Model):
 
 	def add_show(self, data, runningStatus, user):
 		self.user = user
-		self.language = data['originalLanguage']
+		self.language = data.get('originalLanguage', 'eng')
 		if runningStatus == 'Continuing':
 			try:
 				self.airsDays = data['airsDays']
@@ -46,35 +46,43 @@ class Show(models.Model):
 			except:
 				pass
 		self.delayWatch = 0
+		
+		# Handle series name and overview with fallback
 		if self.language != 'eng':
-			t = get_series_translation(data['id'],'eng')
-			self.seriesName = t['name']
 			try:
-				self.overview = t['overview']
-			except:
-				pass
+				t = get_series_translation(data['id'], 'eng')
+				self.seriesName = t.get('name', data['name'])
+				self.overview = t.get('overview') or data.get('overview', '')
+			except Exception:
+				self.seriesName = data['name']
+				self.overview = data.get('overview', '')
 		else:
 			self.seriesName = data['name']
-			self.overview = data['overview']
+			self.overview = data.get('overview', '')
+
 		try:
 			self.slug = data['slug']
 		except:
 			self.slug = slugify(self.seriesName)
+			
 		self.banner = get_image_link(data['id'])
-		for i in range(len(data['remoteIds'])):
+		
+		for i in range(len(data.get('remoteIds', []))):
 			if data['remoteIds'][i]['sourceName'] == 'IMDB':
 				self.imdbID = data['remoteIds'][i]['id']
+				
 		self.tvdbID = data['id']
-		#self.siteRating = data['score']
 		try:
 			self.network = data['originalNetwork']['name']
 		except:
 			self.network = "unknown"
+			
 		self.runningStatus = runningStatus
-		self.genre_list = json.dumps(data['genres'])
+		self.genre_list = json.dumps(data.get('genres', []))
 		self.last_updated = timezone.now()
 		self.watch_later = False
 		self.stopped_watching = False
+		
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
@@ -82,7 +90,7 @@ class Show(models.Model):
 				self.firstAired = datetime.strptime(data['first_air_time'], '%Y-%m-%d').date()
 			except:
 				pass
-			pass
+				
 		self.save()
 
 	@property
@@ -296,22 +304,34 @@ class Episode(models.Model):
 
 	def add_episode(self, season, data):
 		self.season = season
-		self.episodeName = data['name']
-		try:
-			self.overview = data['overview']
-		except:
-			pass
+		self.tvdbID = data['id']
+		
+		# Check language and fetch English translation if non-English show
+		if self.season.show.language != 'eng':
+			try:
+				t = get_episode_translation(self.tvdbID, 'eng')
+				self.episodeName = t.get('name') or data['name']
+				self.overview = t.get('overview') or data.get('overview')
+			except Exception:
+				self.episodeName = data['name']
+				self.overview = data.get('overview', '')
+		else:
+			self.episodeName = data['name']
+			self.overview = data.get('overview', '')
+
 		self.number = int(data['number'])
+		
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
 		except:
 			pass
+			
 		try:
 			self.episodeImage = data['image']
 		except:
 			pass
-		self.tvdbID = data['id']
-		self.finaleType = data['finaleType']
+			
+		self.finaleType = data.get('finaleType')
 		self.save()
 
 	def wst(self):

@@ -30,5 +30,6 @@ urlpatterns = [
     url(r'^user_register',views.user_register),
     url(r'^history',views.history),
     url(r'^set_watch_delay', views.set_watch_delay),
-    url(r'^(?P<view_type>|movies|movies_history|)$', views.movies)
+    url(r'^(?P<view_type>|movies|movies_history|)$', views.movies),
+    url(r'^recommendations', views.recommendations_page)
 ]

@@ -1,0 +1,41 @@
+{% extends "tvshow/header.html" %}
+{% block content %}
+<div class="container">
+  <h1 class="mb-4">Recommended For You</h1>
+  
+  {% if recommended_shows %}
+    <div class="row">
+      {% for show in recommended_shows %}
+      <div class="col-md-6 mb-3">
+        <div class="card p-3" style="max-width: 540px;">
+          <div class="row g-0 align-items-center">
+            <div class="col-4">
+              {% if show.image_url %}
+                <img src="{{ show.image_url }}" class="img-fluid rounded" alt="{{ show.name }}">
+              {% else %}
+                <img src="http://twokeyfun.com/noimage.jpg" class="img-fluid rounded" alt="No Image">
+              {% endif %}
+            </div>
+            <div class="col-8 ps-3">
+              <h5 class="card-title">{{ show.name }}</h5>
+              <p class="card-text"><small class="text-body-secondary">{{ show.overview|truncatechars:120 }}</small></p>
+              
+              {% if show.tvdb_id %}
+              <form action="/add" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="show_id" value="{{ show.tvdb_id }}">
+                <input type="hidden" name="runningStatus" value="{{ show.status|default:'Continuing' }}">
+                <button type="submit" class="btn btn-primary btn-sm">Add to Library</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Add a few more shows to your library to generate personalized recommendations!</p>
+  {% endif %}
+</div>
+{% endblock %}
