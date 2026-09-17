@@ -244,10 +244,16 @@ def recommendations_page(request):
                 except Exception:
                     pass
                 
+                try:
+                    image_url, tvdb_overview, imdb_id, tvdb_id, status = get_image_from_search(name)
+                except Exception:
+                    image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
+
                 recommended_pool.append({
                     'name': name,
                     'image_url': image_url,
-                    'overview': tmdb_overview if tmdb_overview else tvdb_overview, # Fallback to English TMDB overview
+                    'overview': tmdb_overview if tmdb_overview else tvdb_overview,
+                    'imdbID': imdb_id,  # <-- Ensure imdb_id is included here
                     'tvdb_id': tvdb_id,
                     'status': status
                 })
@@ -351,32 +357,56 @@ def add_search_movie(request):
 
 @login_required(login_url='/login')
 def single_show(request, show_slug):
-    if 'rec_flag' in request.POST:
-        rec_flag = request.POST['rec_flag']
-    else:
-        rec_flag = False
+    rec_flag = request.POST.get('rec_flag', False)
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     show = Show.objects.get(user=user, slug__iexact = show_slug)
     next_episode = show.next_episode
-    watched_pct = show.episode_watch_count / show.total_episodes * 100
-    if show.airsTime:
-        time_obj = datetime.strptime(show.airsTime, "%H:%M").time()
-    else:
-        time_obj = None
+    watched_pct = (show.episode_watch_count / show.total_episodes * 100) if show.total_episodes > 0 else 0
+    
+    time_obj = datetime.strptime(show.airsTime, "%H:%M").time() if show.airsTime else None
+    
+    recommended = []
     if rec_flag:
-        get_recommended = get_recommendations(show.seriesName,'show')
-        recommended = get_recommended["similar"]["results"]
-        for rec in recommended:
-            try:
-                rec['image_url'], rec['overview'], rec['imdbID'], rec['tvdb_id'], rec['status'] = get_image_from_search(rec['name'])
-            except:
-                print("No image for show")
-                
+        try:
+            # This calls your TMDB wrapper which is forced to en-US
+            get_recommended = get_recommendations(show.seriesName, 'show')
+            if get_recommended and "similar" in get_recommended:
+                results = get_recommended["similar"].get("results", [])
+                for item in results:
+                    name = item.get('name')
+                    tmdb_overview = item.get('overview', '') # English overview straight from TMDB
+                    
+                    if not name:
+                        continue
+                        
+                    # Fetch image and IDs from TVDB safely without letting TVDB overwrite our English overview
+                    image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
+                    try:
+                        image_url, _, imdb_id, tvdb_id, status = get_image_from_search(name)
+                    except Exception:
+                        pass
+                        
+                    recommended.append({
+                        'name': name,
+                        'image_url': image_url,
+                        'overview': tmdb_overview if tmdb_overview else tvdb_overview, # Fallback to English TMDB description
+                        'imdbID': imdb_id,
+                        'tvdb_id': tvdb_id,
+                        'status': status
+                    })
+        except Exception as e:
+            print(f"Could not fetch recommendations: {e}")
+            recommended = []
 
-    else:
-        recommended = {}
-    return render(request, 'tvshow/single.html', {'show':show, 'next_episode':next_episode, 'watched_pct':watched_pct, 'time':time_obj, 'rec_flag':rec_flag, 'recommended':recommended })
+    return render(request, 'tvshow/single.html', {
+        'show': show, 
+        'next_episode': next_episode, 
+        'watched_pct': watched_pct, 
+        'time': time_obj, 
+        'rec_flag': rec_flag, 
+        'recommended': recommended 
+    })
 
 @login_required(login_url='/login')
 def single_movie(request, movie_slug):
