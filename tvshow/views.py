@@ -137,7 +137,7 @@ def home(request, view_type):
         flag = True
 
     # 3. Apply Python-side Filters ONLY when viewing 'all'
-    if view_type == 'all':
+    if view_type:
         if genre_filter:
             filtered_shows = []
             for show in show_data:

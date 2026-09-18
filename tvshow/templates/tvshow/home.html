@@ -18,122 +18,168 @@
     </h1>
   </div>
 
-  <!-- Filters Form (Only shows on non-Watch Next screens) -->
-  {% if view_type == 'all' %}
-  <div class="mb-4">
-    <form method="get" action="" class="row g-2 align-items-center">
-      <!-- Genre Filter -->
-      <div class="col-auto">
-        <label for="genre-select" class="col-form-label fw-bold">Genre:</label>
-      </div>
-      <div class="col-auto">
-        <select name="genre" id="genre-select" class="form-select form-select-sm" onchange="this.form.submit()">
-          <option value="">All Genres</option>
-          {% for genre in available_genres %}
-            <option value="{{ genre }}" {% if genre_filter == genre %}selected{% endif %}>
-              {{ genre }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
+  <!-- Filters & Search Box (Hidden ONLY on the Watch Next page) -->
+  {% if view_type == 'all' or view_type == 'upcoming' or view_type == 'watch_later' or view_type == 'stopped_watching' %}
+    <!-- Search Filter Text Box -->
+    <div class="mb-3">
+      <input type="text" id="showSearchInput" class="form-control" placeholder="Type to filter shows by name..." autocomplete="off">
+    </div>
 
-      <!-- Language Filter -->
-      <div class="col-auto">
-        <label for="language-select" class="col-form-label fw-bold ms-2">Language:</label>
-      </div>
-      <div class="col-auto">
-        <select name="language" id="language-select" class="form-select form-select-sm" onchange="this.form.submit()">
-          <option value="">All Languages</option>
-          {% for lang in available_languages %}
-            <option value="{{ lang }}" {% if language_filter == lang %}selected{% endif %}>
-              {{ lang|upper }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      {% if genre_filter or language_filter %}
+    <!-- Genre & Language Filters Form -->
+    <div class="mb-4">
+      <form method="get" action="" class="row g-2 align-items-center">
+        <!-- Genre Filter -->
         <div class="col-auto">
-          <a href="?" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+          <label for="genre-select" class="col-form-label fw-bold">Genre:</label>
         </div>
-      {% endif %}
-    </form>
-  </div>
+        <div class="col-auto">
+          <select name="genre" id="genre-select" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Genres</option>
+            {% for genre in available_genres %}
+              <option value="{{ genre }}" {% if genre_filter == genre %}selected{% endif %}>
+                {{ genre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Language Filter -->
+        <div class="col-auto">
+          <label for="language-select" class="col-form-label fw-bold ms-2">Language:</label>
+        </div>
+        <div class="col-auto">
+          <select name="language" id="language-select" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Languages</option>
+            {% for lang in available_languages %}
+              <option value="{{ lang }}" {% if language_filter == lang %}selected{% endif %}>
+                {{ lang|upper }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Clear Filters / Search Button -->
+        <div class="col-auto" id="clearFiltersWrapper" style="display: {% if genre_filter or language_filter %}block{% else %}none{% endif %};">
+          <a href="?" id="clearFiltersBtn" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+      </form>
+    </div>
   {% endif %}
 
-  {% for show in show_data %}
-  <div class="card mb-2" style="max-width: 540px;">
-    <div class="row g-0 align-items-start">
-      <div class="col-4 col-sm-3">
-        <a href='/show/{{show.slug}}'>
-          <img class="img-fluid rounded-start" src="{{show.banner}}" alt="{{show.seriesName}}" width="100px">
-        </a>
-      </div>
-      {% if flag %}
-      <div class="col-6 col-md-3">
-        <div class="card-title">
-          
-          
-          
-          {% if view_type == 'upcoming' %}
-          {{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}<br>
-          {% endif %}
-          {{show.seriesName}} {% if show.delayWatch > 0 %}<span class="badge bg-info text-dark">{{ show.delayWatch }}</span>{% endif %}
-
+  <div id="showsContainer">
+    {% for show in show_data %}
+    <div class="card mb-2 show-card" style="max-width: 540px;" data-name="{{ show.seriesName|lower }}">
+      <div class="row g-0 align-items-start">
+        <div class="col-4 col-sm-3">
+          <a href='/show/{{show.slug}}'>
+            <img class="img-fluid rounded-start" src="{{show.banner}}" alt="{{show.seriesName}}" width="100px">
+          </a>
         </div>
-        <p class="card-text">
-          {% if show.next_episode.firstAired == time.date %}
-          <span class="badge bg-warning text-dark">New</span> 
-          {% endif %}
-          <small class="text-body-secondary">S{{show.next_episode.season.number}} |
-            E{{show.next_episode.number}} 
-            {% if show.total_aired_episodes|sub:show.episode_watch_count > 1 %}
-            +{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}
+        {% if flag %}
+        <div class="col-6 col-md-3">
+          <div class="card-title">
+            {% if view_type == 'upcoming' %}
+            {{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}<br>
             {% endif %}
-            </small></p>
-        <p class="card-text"><small class="text-body-secondary">
-        {% if show.next_episode.finaleType %}
-          <span class="badge bg-danger text-dark">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
-        {% endif %}
-        <a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
-        {{show.next_episode.episodeName}}</a>
-        </small></p>
-        
-      </div>
-      <div class="col-1 col-md-1 align-self-center">
-        <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
-          <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
-          <input type="hidden" name="home" value="home">
-          <input type="checkbox" onclick="this.form.submit();">
-        </form>
-      </div>
-      {% if show.is_watched %}
-      <div class="progress">
-        <div class="progress-bar progress-bar-striped bg-success" role="progressbar"
-          style="width: {{ show.watched_pct }}%;" aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0"
-          aria-valuemax="{{show.total_episodes}}"></div>
-      </div>
-      {% else %}
-      <div class="progress">
-        <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ show.watched_pct }}%;"
-          aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0" aria-valuemax="{{show.total_episodes}}"></div>
-      </div>
-      {% endif %}
-      {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
-      {% else %}
-      <div class="col-8 col-md-3">
-        <div class="card-title">
-          {{show.seriesName}}
-          <p class="card-text"><small class="text-body-secondary">{{show.overview}}</small></p>
-        </div>
-      </div>
-      {% endif %}
-    
-    </div>
-  </div>
+            <span class="show-title-text">{{show.seriesName}}</span> {% if show.delayWatch > 0 %}<span class="badge bg-info text-dark">{{ show.delayWatch }}</span>{% endif %}
 
-  {% endfor %}
+          </div>
+          <p class="card-text">
+            {% if show.next_episode.firstAired == time.date %}
+            <span class="badge bg-warning text-dark">New</span> 
+            {% endif %}
+            <small class="text-body-secondary">S{{show.next_episode.season.number}} |
+              E{{show.next_episode.number}} 
+              {% if show.total_aired_episodes|sub:show.episode_watch_count > 1 %}
+              +{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}
+              {% endif %}
+              </small></p>
+          <p class="card-text"><small class="text-body-secondary">
+          {% if show.next_episode.finaleType %}
+            <span class="badge bg-danger text-dark">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
+          {% endif %}
+          <a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
+          {{show.next_episode.episodeName}}</a>
+          </small></p>
+          
+        </div>
+        <div class="col-1 col-md-1 align-self-center">
+          <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
+            <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
+            <input type="hidden" name="home" value="home">
+            <input type="checkbox" onclick="this.form.submit();">
+          </form>
+        </div>
+        {% if show.is_watched %}
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped bg-success" role="progressbar"
+            style="width: {{ show.watched_pct }}%;" aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0"
+            aria-valuemax="{{show.total_episodes}}"></div>
+        </div>
+        {% else %}
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ show.watched_pct }}%;"
+            aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0" aria-valuemax="{{show.total_episodes}}"></div>
+        </div>
+        {% endif %}
+        {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
+        {% else %}
+        <div class="col-8 col-md-3">
+          <div class="card-title">
+            <span class="show-title-text">{{show.seriesName}}</span>
+            <p class="card-text"><small class="text-body-secondary">{{show.overview}}</small></p>
+          </div>
+        </div>
+        {% endif %}
+      
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>
+
+<!-- Instant Type-to-Filter & Clear Control Script (Only initialized if search input exists) -->
+<script>
+  const searchInput = document.getElementById('showSearchInput');
+  const showCards = document.querySelectorAll('.show-card');
+  const clearWrapper = document.getElementById('clearFiltersWrapper');
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  
+  const hasServerFilters = {% if genre_filter or language_filter %}true{% else %}false{% endif %};
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase().trim();
+
+      showCards.forEach(card => {
+        const showName = card.getAttribute('data-name') || '';
+        if (showName.includes(searchTerm)) {
+          card.style.display = ''; 
+        } else {
+          card.style.display = 'none'; 
+        }
+      });
+
+      if (clearWrapper) {
+        if (searchTerm.length > 0 || hasServerFilters) {
+          clearWrapper.style.display = 'block';
+        } else {
+          clearWrapper.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function(e) {
+      if (!hasServerFilters && searchInput) {
+        e.preventDefault();
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+</script>
 
 {% if messages %}
 <div class="modal fade" id="messages" tabindex="-1" role="dialog" aria-labelledby="messagesLabel" aria-hidden="true">
