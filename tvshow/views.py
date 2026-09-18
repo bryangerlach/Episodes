@@ -13,6 +13,7 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
+import os
 
 def login_view(request):
     if request.method == 'POST':
@@ -210,6 +211,15 @@ def update_show(request):
 
 @login_required(login_url='/login')
 def recommendations_page(request):
+    access_token = os.getenv("TMDB_ACCESS_TOKEN")
+    
+    # Catches None (unset), "" (blank), and "   " (whitespace-only)
+    if not access_token or not access_token.strip():
+        return render(request, 'tvshow/recommendations.html', {
+            'recommended_shows': [],
+            'has_token': False
+        })
+        
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     
@@ -226,7 +236,7 @@ def recommendations_page(request):
         
         for item in rec_data.get("similar", {}).get("results", []):
             name = item.get("name")
-            tmdb_overview = item.get("overview", "") # English overview straight from TMDB
+            tmdb_overview = item.get("overview", "")
             
             if not name:
                 continue
@@ -236,30 +246,24 @@ def recommendations_page(request):
             if clean_name_lower not in seen_recommendations:
                 seen_recommendations.add(clean_name_lower)
                 
-                # Fetch artwork and IDs from TVDB safely without breaking language
                 image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
                 try:
-                    # We only pull image and ids here; we discard TVDB's native-language overview
                     image_url, _, imdb_id, tvdb_id, status = get_image_from_search(name)
                 except Exception:
                     pass
                 
-                try:
-                    image_url, tvdb_overview, imdb_id, tvdb_id, status = get_image_from_search(name)
-                except Exception:
-                    image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
-
                 recommended_pool.append({
                     'name': name,
                     'image_url': image_url,
                     'overview': tmdb_overview if tmdb_overview else tvdb_overview,
-                    'imdbID': imdb_id,  # <-- Ensure imdb_id is included here
+                    'imdbID': imdb_id,
                     'tvdb_id': tvdb_id,
                     'status': status
                 })
 
     return render(request, 'tvshow/recommendations.html', {
-        'recommended_shows': recommended_pool
+        'recommended_shows': recommended_pool,
+        'has_token': True
     })
 
 @login_required(login_url='/login')

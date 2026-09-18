@@ -5,7 +5,7 @@ services:
     environment:
       SECRET_KEY: "%qufh2ea8!-$%_ctzw=in*d2__i#s*3_mph82!+(3m9g*!%@tt"
       CSRF_TRUSTED_ORIGINS: "http://localhost"
-      TMDB_ACCESS_TOKEN: "APIaccesstoken"
+      TMDB_ACCESS_TOKEN: ""
     ports:
       - "3000:3000"
     volumes: 

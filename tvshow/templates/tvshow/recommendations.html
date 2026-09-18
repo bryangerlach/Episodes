@@ -1,9 +1,87 @@
 {% extends "tvshow/header.html" %}
 {% block content %}
 <div class="container">
-  <h1 class="mb-4">Recommended For You</h1>
+  <h2 class="mb-4"><i class="bi bi-stars"></i> Recommended For You</h2>
   
-  {% if recommended_shows %}
+  {% if not has_token %}
+    <!-- Setup Instructions Card -->
+    <div class="card border-warning mb-4">
+      <div class="card-header bg-warning text-dark fw-bold">
+        <i class="bi bi-exclamation-triangle-fill"></i> TMDB API Token Required
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">Recommendations are not configured yet.</h5>
+        <p class="card-text">
+          To enable personalized show and anime recommendations, you need to provide a TMDB API Read Access Token in your environment configuration.
+        </p>
+        
+        <hr>
+        
+        <h6 class="fw-bold">How to get a TMDB API Token:</h6>
+        <ol class="mb-3">
+          <li>Go to <a href="https://www.themoviedb.org/" target="_blank">The Movie Database (TMDB)</a> and sign up for a free account.</li>
+          <li>Navigate to your account <strong>Settings</strong> &gt; <strong>API</strong>.</li>
+          <li>Request an API key (Developer option is free and instant).</li>
+          <li>Copy your <strong>API Read Access Token</strong> (the long JWT string starting with <code>eyJ...</code>).</li>
+        </ol>
+        
+        <h6 class="fw-bold">Option 1: If using <code>docker-compose.yml</code> (Recommended)</h6>
+        <p class="mb-2">Open your repository's <code>docker-compose.yml</code> file and paste your token inside the <code>TMDB_ACCESS_TOKEN</code> environment variable:</p>
+
+        <pre class="bg-dark text-light p-3 rounded mt-1"><code>services:
+  web:
+    image: bryangerlach/episodes:latest
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: "%qufh2ea8!-$%_ctzw=in*d2__i#s*3_mph82!+(3m9g*!%@tt"
+      CSRF_TRUSTED_ORIGINS: "http://localhost"
+      TMDB_ACCESS_TOKEN: "<span class="text-warning">your_long_api_read_access_token_here</span>"
+    ports:
+      - "3000:3000"
+    volumes: 
+      - db-data:/app/db
+    dns:
+      - 8.8.8.8
+
+volumes:
+  db-data:</code></pre>
+
+        <p class="mt-3 mb-1">After saving your file, apply the changes by running:</p>
+        <pre class="bg-dark text-light p-2 rounded"><code>docker compose down && docker compose up -d</code></pre>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold">Option 2: Manual Server Setup (Non-Docker)</h6>
+        <p class="mb-2">If you are running the app manually on a host machine, configure the environment variable based on your operating system:</p>
+        
+        <ul class="mb-0">
+          <li class="mb-3">
+            <strong>Windows:</strong>
+            <ol class="mt-1 mb-1 small text-muted">
+              <li>Press the Windows Key, search for <em>Environment Variables</em>, and select <strong>Edit the system environment variables</strong>.</li>
+              <li>Click <strong>Environment Variables...</strong> and click <strong>New...</strong> under user or system variables.</li>
+              <li>Set Variable name to <code>TMDB_ACCESS_TOKEN</code> and Variable value to your token. Click OK.</li>
+              <li>Restart your terminal or VSCodium window.</li>
+            </ol>
+            <p class="small text-muted mb-0">Alternatively, in PowerShell/CMD before running Django:</p>
+            <pre class="bg-dark text-light p-2 rounded mt-1"><code># PowerShell
+$env:TMDB_ACCESS_TOKEN="your_token_here"
+
+:: Command Prompt (CMD)
+set TMDB_ACCESS_TOKEN=your_token_here</code></pre>
+          </li>
+
+          <li class="mb-3">
+            <strong>Linux (Manual Shell Export):</strong> Export the variable in your shell session before starting Django:
+            <pre class="bg-dark text-light p-2 rounded mt-1"><code>export TMDB_ACCESS_TOKEN="your_token_here"
+python manage.py runserver 0.0.0.0:3000</code></pre>
+            <p class="small text-muted mb-0">To make it permanent, add the export line to your <code>~/.bashrc</code> or <code>~/.zshrc</code> file.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  
+  {% elif recommended_shows %}
     <div class="row">
       {% for show in recommended_shows %}
       <div class="col-md-6 mb-4">
@@ -17,7 +95,6 @@
               {% endif %}
             </div>
             <div class="col-8 ps-3">
-              <!-- IMDb Link implementation matching single.html -->
               {% if show.imdbID %}
                 <a target="_blank" href="https://www.imdb.com/title/{{ show.imdbID }}">
                   <h5 class="card-title text-decoration-underline">{{ show.name }} <i class="bi bi-box-arrow-up-right fs-6"></i></h5>
