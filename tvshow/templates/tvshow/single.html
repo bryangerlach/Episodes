@@ -140,26 +140,76 @@
       <div class="card-header">
         <div class="d-grid gap-2 d-md-flex">
           <form action="/show/{{show.slug}}" method="post" id="similarForm">{% csrf_token %}
-            <input type="hidden" value={{show.slug}} name='show_slug'>
-            <input type="hidden" value=True name='rec_flag'>
-            <button type="submit" class="btn btn-success" id="siimilarBtn">List Similar Shows</button>
+            <input type="hidden" value="{{show.slug}}" name='show_slug'>
+            <input type="hidden" value="True" name='rec_flag'>
+            <input type="hidden" value="5" name='count'>
+            <button type="submit" class="btn btn-success" id="similarBtn">List Similar Shows</button>
           </form>
         </div>
       </div>
       <div class="list-group list-group-flush" id="similarShows">
-        {% for rec in recommended %}
-          <div class=list-group-item>
-            <a target="_blank" href="https://www.imdb.com/title/{{rec.imdbID}}">{{rec.name}}<br><img class="card-img-top mx-auto" src="{{rec.image_url}}" alt="Card image cap" style="width: 200px;"></a>
-            <br>{{rec.overview}}
-            <form class='form-inline' action="/add" method="post">{% csrf_token %}
-              <button type="submit" class="btn btn-outline-primary">Add</button>
-              <input type="hidden" name="show_id" value="{{rec.tvdb_id}}">
-              <input type="hidden" name="runningStatus" value="{{rec.status}}">
+        {% if recommended %}
+          {% for rec in recommended %}
+            <!-- Dynamically drop the anchor at the start of the newly loaded batch -->
+            {% if forloop.counter == scroll_index %}
+              <div id="newRecsAnchor"></div>
+            {% endif %}
+
+            <div class="list-group-item p-3">
+              <div class="row g-0 align-items-center">
+                <div class="col-4">
+                  {% if rec.image_url %}
+                    <img src="{{ rec.image_url }}" class="img-fluid rounded mx-auto d-block" alt="{{ rec.name }}">
+                  {% else %}
+                    <img src="http://twokeyfun.com/noimage.jpg" class="img-fluid rounded mx-auto d-block" alt="No Image">
+                  {% endif %}
+                </div>
+                <div class="col-8 ps-3">
+                  {% if rec.imdbID %}
+                    <a target="_blank" href="https://www.imdb.com/title/{{ rec.imdbID }}">
+                      <h5 class="card-title text-decoration-underline">{{ rec.name }} <i class="bi bi-box-arrow-up-right fs-6"></i></h5>
+                    </a>
+                  {% else %}
+                    <h5 class="card-title">{{ rec.name }}</h5>
+                  {% endif %}
+
+                  <p class="card-text text-body-secondary small mt-2">
+                    {{ rec.overview|truncatechars:140 }}
+                  </p>
+                  
+                  {% if rec.tvdb_id %}
+                  <form action="/add" method="post" class="mt-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="show_id" value="{{ rec.tvdb_id }}">
+                    <input type="hidden" name="runningStatus" value="{{ rec.status|default:'Continuing' }}">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Add</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+
+          <!-- Show More Button (Hidden once current count reaches 15) -->
+          {% if current_count < 15 %}
+          <div class="list-group-item text-center bg-light py-3">
+            <form action="/show/{{show.slug}}" method="post" class="show-more-form">{% csrf_token %}
+              <input type="hidden" value="{{show.slug}}" name='show_slug'>
+              <input type="hidden" value="True" name='rec_flag'>
+              <input type="hidden" value="{{next_count}}" name='count'>
+              <button type="submit" class="btn btn-outline-success btn-sm px-4 show-more-btn">
+                <i class="bi bi-plus-circle"></i> Show More Recommendations (Showing {{ recommended|length }})
+              </button>
             </form>
           </div>
-        {% endfor %}
+          {% endif %}
+
+        {% else %}
+          <div class="list-group-item text-center text-muted py-4">
+            Click "List Similar Shows" to find recommendations.
+          </div>
+        {% endif %}
       </div>
-    </div>
 
     <div class="modal fade watch-delay" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
       aria-hidden="true">
@@ -374,13 +424,44 @@
 
 <script>
     window.onload = function() {
-        {% if recommended and recommended|length > 0 %}
-            const newDataSection = document.getElementById('similarShows');
-            if (newDataSection) {
-                newDataSection.scrollIntoView({ behavior: 'smooth' });
-            }
-        {% endif %}
+        const newAnchor = document.getElementById('newRecsAnchor');
+        if (newAnchor) {
+            newAnchor.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            {% if recommended and recommended|length > 0 %}
+                const newDataSection = document.getElementById('similarShows');
+                if (newDataSection) {
+                    newDataSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            {% endif %}
+        }
     };
+
+    // Add loading spinner animation on "List Similar Shows" submit
+    document.addEventListener('DOMContentLoaded', function() {
+        const similarForm = document.getElementById('similarForm');
+        if (similarForm) {
+            similarForm.addEventListener('submit', function() {
+                const btn = document.getElementById('similarBtn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Loading...';
+                }
+            });
+        }
+
+        // Add loading spinner animation on all "Show More" form submits
+        const showMoreForms = document.querySelectorAll('.show-more-form');
+        showMoreForms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = form.querySelector('.show-more-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Loading More...';
+                }
+            });
+        });
+    });
 </script>
 
 {% for season in show.season_set.all %}

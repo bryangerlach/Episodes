@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id, get_image_from_search
 from .utils.recs_api_wrap import get_recommendations
+from .utils.utils import fetch_deduplicated_recommendations
 from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
@@ -14,6 +15,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
 import os
+import json
+import random
 
 def login_view(request):
     if request.method == 'POST':
@@ -24,7 +27,6 @@ def login_view(request):
             auth.login(request, user)
             return HttpResponseRedirect('/')
         else:
-            # Handle failed login attempt (e.g., display error message)
             pass
     return render(request, 'tvshow/login.html')
 
@@ -63,12 +65,10 @@ def home(request, view_type):
     user = User.objects.get(id=user_id)
     time = datetime.now()
     
-    # Base queryset for the user's shows
     shows = user.show_set.all().order_by('-modified')
     genre_filter = request.GET.get('genre', '').strip()
     language_filter = request.GET.get('language', '').strip()
 
-    # Robust helper function with case-insensitive lookup and safe parsing fallbacks
     def extract_genres(show):
         if not show.genre_list:
             return []
@@ -102,7 +102,6 @@ def home(request, view_type):
             pass
         return list(set(extracted))
 
-    # 1. Extract unique clean genres and languages for the dropdowns
     available_genres = set()
     available_languages = set()
     
@@ -115,7 +114,6 @@ def home(request, view_type):
     available_genres = sorted(list(available_genres))
     available_languages = sorted(list(available_languages))
 
-    # 2. Handle View Type filters
     if view_type == 'all':
         show_data = list(shows)
         flag = False
@@ -129,14 +127,17 @@ def home(request, view_type):
         data = [show for show in shows if show.next_episode and show.next_episode.firstAired and (show.next_episode.firstAired > time.date() - timedelta(days=show.delayWatch))]
         show_data = sorted(data, key=lambda x: x.next_episode.firstAired)
         flag = True
-    else: # Watch Next view (default)
-        data = [show for show in shows if not show.is_watched and not show.watch_later and not show.stopped_watching and show.next_episode.firstAired + timedelta(days=show.delayWatch) <= time.date()]
-        for show in data:
-            show.watched_pct = show.episode_watch_count / show.total_episodes * 100
+    else: 
+        data = [show for show in shows if not show.is_watched and not show.watch_later and not show.stopped_watching and show.next_episode and show.next_episode.firstAired and show.next_episode.firstAired + timedelta(days=show.delayWatch) <= time.date()]
         show_data = data
         flag = True
 
-    # 3. Apply Python-side Filters ONLY when viewing 'all'
+    for show in show_data:
+        if show.total_episodes > 0:
+            show.watched_pct = show.episode_watch_count / show.total_episodes * 100
+        else:
+            show.watched_pct = 0
+
     if view_type:
         if genre_filter:
             filtered_shows = []
@@ -197,23 +198,10 @@ def update_show(request):
             return HttpResponseRedirect('/show/%s'%show.slug)
     return HttpResponseRedirect('/')
 
-# @login_required(login_url='/login')
-# def update_show_rating(request):
-#     if request.method == 'POST':
-#         show_id = request.POST.get('show_id')
-#         show = Show.objects.get(id=show_id)
-#         if show:
-#             new_rating = request.POST.get('new_rating')
-#             show.userRating = new_rating
-#             show.save()
-#             return HttpResponseRedirect('/show/%s'%show.slug)
-#     return HttpResponseRedirect('/')
-
 @login_required(login_url='/login')
 def recommendations_page(request):
     access_token = os.getenv("TMDB_ACCESS_TOKEN")
     
-    # Catches None (unset), "" (blank), and "   " (whitespace-only)
     if not access_token or not access_token.strip():
         return render(request, 'tvshow/recommendations.html', {
             'recommended_shows': [],
@@ -223,43 +211,17 @@ def recommendations_page(request):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     
-    user_shows = user.show_set.all()
-    user_show_names = set(show.seriesName.lower().strip() for show in user_shows)
-    
-    seed_shows = list(user_shows.order_by('-modified')[:5])
+    # Grab active user shows (excluding stopped watching and watch later) and pick up to 5 random ones safely
+    active_shows = list(user.show_set.filter(stopped_watching=False, watch_later=False))
+    seed_shows = random.sample(active_shows, min(len(active_shows), 5)) if active_shows else []
     
     recommended_pool = []
-    seen_recommendations = set(user_show_names)
     
     for show in seed_shows:
-        rec_data = get_recommendations(show.seriesName, media_type='show', limit=5)
-        
-        for item in rec_data.get("similar", {}).get("results", []):
-            name = item.get("name")
-            tmdb_overview = item.get("overview", "")
-            
-            if not name:
-                continue
-                
-            clean_name_lower = name.lower().strip()
-            
-            if clean_name_lower not in seen_recommendations:
-                seen_recommendations.add(clean_name_lower)
-                
-                image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
-                try:
-                    image_url, _, imdb_id, tvdb_id, status = get_image_from_search(name)
-                except Exception:
-                    pass
-                
-                recommended_pool.append({
-                    'name': name,
-                    'image_url': image_url,
-                    'overview': tmdb_overview if tmdb_overview else tvdb_overview,
-                    'imdbID': imdb_id,
-                    'tvdb_id': tvdb_id,
-                    'status': status
-                })
+        show_recs = fetch_deduplicated_recommendations(user, show.seriesName, target_count=5)
+        for rec in show_recs:
+            if rec not in recommended_pool:
+                recommended_pool.append(rec)
 
     return render(request, 'tvshow/recommendations.html', {
         'recommended_shows': recommended_pool,
@@ -291,7 +253,6 @@ def add(request):
                     season.add_season(show, i+1)
                     season_episodes_data = seasons_data[string]
                     for season_episode in season_episodes_data['episodes']:
-                        #print(season_episode)
                         if season_episode['name']:
                             episode = Episode()
                             episode.add_episode(season, season_episode)
@@ -362,6 +323,12 @@ def add_search_movie(request):
 @login_required(login_url='/login')
 def single_show(request, show_slug):
     rec_flag = request.POST.get('rec_flag', False)
+    
+    try:
+        target_count = int(request.POST.get('count', 5))
+    except (ValueError, TypeError):
+        target_count = 5
+
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     show = Show.objects.get(user=user, slug__iexact = show_slug)
@@ -372,36 +339,10 @@ def single_show(request, show_slug):
     
     recommended = []
     if rec_flag:
-        try:
-            # This calls your TMDB wrapper which is forced to en-US
-            get_recommended = get_recommendations(show.seriesName, 'show')
-            if get_recommended and "similar" in get_recommended:
-                results = get_recommended["similar"].get("results", [])
-                for item in results:
-                    name = item.get('name')
-                    tmdb_overview = item.get('overview', '') # English overview straight from TMDB
-                    
-                    if not name:
-                        continue
-                        
-                    # Fetch image and IDs from TVDB safely without letting TVDB overwrite our English overview
-                    image_url, tvdb_overview, imdb_id, tvdb_id, status = None, "", None, None, ""
-                    try:
-                        image_url, _, imdb_id, tvdb_id, status = get_image_from_search(name)
-                    except Exception:
-                        pass
-                        
-                    recommended.append({
-                        'name': name,
-                        'image_url': image_url,
-                        'overview': tmdb_overview if tmdb_overview else tvdb_overview, # Fallback to English TMDB description
-                        'imdbID': imdb_id,
-                        'tvdb_id': tvdb_id,
-                        'status': status
-                    })
-        except Exception as e:
-            print(f"Could not fetch recommendations: {e}")
-            recommended = []
+        recommended = fetch_deduplicated_recommendations(user, show.seriesName, target_count=target_count)
+
+    # Calculate the starting index of the newly loaded batch (e.g. 6 for 10-count, 11 for 15-count)
+    scroll_index = (target_count - 4) if target_count > 5 else 0
 
     return render(request, 'tvshow/single.html', {
         'show': show, 
@@ -409,7 +350,10 @@ def single_show(request, show_slug):
         'watched_pct': watched_pct, 
         'time': time_obj, 
         'rec_flag': rec_flag, 
-        'recommended': recommended 
+        'recommended': recommended,
+        'current_count': target_count,
+        'next_count': target_count + 5,
+        'scroll_index': scroll_index  # Pass this to the template
     })
 
 @login_required(login_url='/login')
@@ -484,7 +428,6 @@ def search(request):
 def refresh_all_continuing(request):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
-    #show_list = Show.objects.filter(Q(runningStatus='Continuing'),Q(last_updated__lte=timezone.now()-timedelta(days=7)),user=user)
     show_list = Show.objects.filter(user=user).exclude(runningStatus="Ended")
     for show in show_list:
         flag = show.refresh_show_data()
@@ -500,7 +443,6 @@ def refresh_show(request):
         show = Show.objects.get(id=show_id)
         flag = show.refresh_show_data()
         if flag:
-            #messages.success(request, '%s has been refreshed.'%show.seriesName)
             print('%s has been refreshed.'%show.seriesName)
     return HttpResponseRedirect('/show/%s'%show.slug)
 

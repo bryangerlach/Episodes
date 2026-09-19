@@ -35,7 +35,8 @@ def get_recommendations(query, media_type='show', limit=5, info=1):
         rec_data = rec_res.json()
         
         formatted_results = []
-        for item in rec_data.get('results', [])[:limit]:
+        # REMOVED [:limit] here so we get the full pool of recommendations
+        for item in rec_data.get('results', []):
             name = item.get('name') if tmdb_type == 'tv' else item.get('title')
             overview = item.get('overview', '')
             
