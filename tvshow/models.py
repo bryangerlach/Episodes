@@ -296,6 +296,7 @@ class Episode(models.Model):
 	status_watched = models.BooleanField(default=False)
 	episodeImage = models.CharField(max_length=150, null=True, blank=True)
 	finaleType = models.CharField(max_length=30, null=True, blank=True)
+	runtime = models.IntegerField(null=True, default=0)
 
 	def __str__(self):
 		showname = self.season.show.seriesName
@@ -320,6 +321,7 @@ class Episode(models.Model):
 			self.overview = data.get('overview', '')
 
 		self.number = int(data['number'])
+		self.runtime = data.get('runtime', 0) or 0
 		
 		try:
 			self.firstAired = datetime.strptime(data['aired'], '%Y-%m-%d').date()
@@ -363,7 +365,12 @@ class Episode(models.Model):
 			self.episodeName = new_data['name']
 
 		self.finaleType = new_data['finaleType']
-		
+
+		if new_data['runtime']:
+			try:
+				self.runtime = new_data['runtime']
+			except:
+				pass
 		if new_data['aired'] != "":
 			try:
 				self.firstAired = new_data['aired']

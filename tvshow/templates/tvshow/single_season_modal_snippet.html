@@ -1,6 +1,6 @@
 {% load my_filters %}
 <div class="modal fade" id="s{{season.number}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog" rolepytho="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <form class="form-inline" action="/season_swt" method="post">{% csrf_token %}
@@ -34,7 +34,13 @@
               {% else %}
               <input type="checkbox" onclick="this.form.submit();">
               {% endif %}
-              {{episode.number}}. <a data-bs-toggle="collapse" href="#collapseS{{episode.season.number}}E{{episode.number}}" aria-expanded="false" aria-controls="collapseS{{episode.season.number}}E{{episode.number}}">{{episode.episodeName}}</a> <small>{{episode.firstAired}}</small>
+              {{episode.number}}. <a data-bs-toggle="collapse" href="#collapseS{{episode.season.number}}E{{episode.number}}" aria-expanded="false" aria-controls="collapseS{{episode.season.number}}E{{episode.number}}">{{episode.episodeName}}</a> 
+              
+              {% if episode.runtime %}
+              <span class="badge bg-secondary ms-1">{{episode.runtime}}m</span>
+              {% endif %}
+
+              <small class="ms-2">{{episode.firstAired}}</small>
             </form>
           </li>
           <div class="collapse" id="collapseS{{episode.season.number}}E{{episode.number}}">

@@ -1,0 +1,92 @@
+{% extends "tvshow/header.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4 fw-bold">Viewing Statistics</h1>
+
+  <!-- Top Summary Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 bg-body-tertiary">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase fw-semibold">Estimated Watch Time</h6>
+          <h2 class="fw-bold text-primary mb-0">{{ total_hours_watched }} hrs</h2>
+          <small class="text-muted">Based on ~45m avg across {{ watched_episodes_count }} episodes</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 bg-body-tertiary">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase fw-semibold">Shows Tracked</h6>
+          <h2 class="fw-bold text-success mb-0">{{ total_shows }}</h2>
+          <small class="text-muted">{{ completed_shows }} fully completed</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 bg-body-tertiary">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase fw-semibold">Episodes Logged</h6>
+          <h2 class="fw-bold text-info mb-0">{{ watched_episodes_count }}</h2>
+          <small class="text-muted">Marked as watched</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row g-4">
+    <!-- Top Genres Chart -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 p-3">
+        <h5 class="card-title fw-bold mb-3">Top Genres</h5>
+        <div style="position: relative; height: 300px;">
+          <canvas id="genreChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Info / Placeholder Card -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 p-4 h-100 d-flex flex-column justify-content-center text-center">
+        <h4 class="fw-bold mb-3">Keep Track & Binge On</h4>
+        <p class="text-muted mb-0">Your statistics update automatically every time you check off episodes from your Watch Next or All Shows lists.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // Safely pass Django context variables to JavaScript
+  const genreLabels = {{ genre_labels|safe }};
+  const genreData = {{ genre_counts|safe }};
+
+  // Render Genre Doughnut Chart
+  const ctx = document.getElementById('genreChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: genreLabels,
+      datasets: [{
+        data: genreData,
+        backgroundColor: [
+          '#38bdf8', '#34d399', '#f87171', '#fbbf24', '#a78bfa'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

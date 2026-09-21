@@ -30,8 +30,6 @@ def get_tvdb_client():
 
 	return _tvdb_client
 
-# --- Refactor Your Functions to Use the Factory ---
-
 def search_series_list(series_name):
 	tvdb = get_tvdb_client() 
 	return tvdb.search(series_name,type="series")

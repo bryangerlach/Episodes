@@ -81,3 +81,36 @@ def fetch_deduplicated_recommendations(user, seed_show_name, target_count=5):
         recommended = []
 
     return recommended
+
+def extract_genres(show):
+        if not show.genre_list:
+            return []
+        extracted = []
+        try:
+            raw = show.genre_list
+            if isinstance(raw, str):
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    import ast
+                    data = ast.literal_eval(raw)
+            else:
+                data = raw
+                
+            items = data if isinstance(data, list) else [data]
+            for item in items:
+                if isinstance(item, dict):
+                    name_val = None
+                    for k, v in item.items():
+                        if k.lower() == 'name':
+                            name_val = v
+                            break
+                    if name_val and isinstance(name_val, str):
+                        extracted.append(name_val.strip().title())
+                elif isinstance(item, str):
+                    clean_str = item.strip()
+                    if clean_str:
+                        extracted.append(clean_str.title())
+        except Exception:
+            pass
+        return list(set(extracted))

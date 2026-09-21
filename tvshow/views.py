@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id, get_image_from_search
 from .utils.recs_api_wrap import get_recommendations
-from .utils.utils import fetch_deduplicated_recommendations
+from .utils.utils import fetch_deduplicated_recommendations, extract_genres
 from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
@@ -14,6 +14,7 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
+from collections import Counter
 import os
 import json
 import random
@@ -68,39 +69,6 @@ def home(request, view_type):
     shows = user.show_set.all().order_by('-modified')
     genre_filter = request.GET.get('genre', '').strip()
     language_filter = request.GET.get('language', '').strip()
-
-    def extract_genres(show):
-        if not show.genre_list:
-            return []
-        extracted = []
-        try:
-            raw = show.genre_list
-            if isinstance(raw, str):
-                try:
-                    data = json.loads(raw)
-                except Exception:
-                    import ast
-                    data = ast.literal_eval(raw)
-            else:
-                data = raw
-                
-            items = data if isinstance(data, list) else [data]
-            for item in items:
-                if isinstance(item, dict):
-                    name_val = None
-                    for k, v in item.items():
-                        if k.lower() == 'name':
-                            name_val = v
-                            break
-                    if name_val and isinstance(name_val, str):
-                        extracted.append(name_val.strip().title())
-                elif isinstance(item, str):
-                    clean_str = item.strip()
-                    if clean_str:
-                        extracted.append(clean_str.title())
-        except Exception:
-            pass
-        return list(set(extracted))
 
     available_genres = set()
     available_languages = set()
@@ -363,6 +331,48 @@ def single_movie(request, movie_slug):
     movie = Movie.objects.get(user=user, slug__iexact = movie_slug)
     
     return render(request, 'tvshow/single_movie.html', {'movie':movie})
+
+def stats_dashboard_view(request):
+    # 1. Basic Counts
+    total_shows = Show.objects.count()
+    completed_shows = Show.objects.filter(status_watched=True).count()
+    
+    # 2. Watch Time Calculation (~45m per watched episode)
+    watched_episodes_count = Episode.objects.filter(status_watched=True).count()
+    total_hours_watched = round(watched_episodes_count * 0.75, 1)
+    total_days_watched = round(total_hours_watched / 24, 1)
+
+    # Aggregate genres
+    genre_counter = Counter()
+    shows = Show.objects.all()
+    
+    for s in shows:
+        for g in extract_genres(s):
+            genre_counter[g] += 1
+
+    # Grab Top 9 individual genres
+    top_genres = genre_counter.most_common(9)
+    genre_labels = [item[0] for item in top_genres]
+    genre_counts = [item[1] for item in top_genres]
+
+    # Calculate "Other" by summing up all remaining genres beyond the top 9
+    all_ranked = genre_counter.most_common()
+    if len(all_ranked) > 9:
+        other_sum = sum(count for _, count in all_ranked[9:])
+        if other_sum > 0:
+            genre_labels.append('Other')
+            genre_counts.append(other_sum)
+
+    context = {
+        'total_shows': total_shows,
+        'completed_shows': completed_shows,
+        'watched_episodes_count': watched_episodes_count,
+        'total_hours_watched': total_hours_watched,
+        'total_days_watched': total_days_watched,
+        'genre_labels': genre_labels,
+        'genre_counts': genre_counts,
+    }
+    return render(request, 'tvshow/stats.html', context)
 
 @login_required(login_url='/login')
 def episode_swt(request):
