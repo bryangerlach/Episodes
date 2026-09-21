@@ -68,77 +68,86 @@
 
   <div id="showsContainer">
     {% for show in show_data %}
-    <div class="card mb-2 show-card" style="max-width: 540px;" data-name="{{ show.seriesName|lower }}">
-      <div class="row g-0 align-items-start">
+    <div class="card mb-3 show-card shadow-sm" style="max-width: 540px;" data-name="{{ show.seriesName|lower }}">
+      <div class="row g-0 align-items-center">
+        <!-- Poster Column -->
         <div class="col-4 col-sm-3">
           <a href='/show/{{show.slug}}'>
-            <img class="img-fluid rounded-start" src="{{show.banner}}" alt="{{show.seriesName}}" width="100px">
+            <img class="img-fluid rounded-start w-100" src="{{show.banner}}" alt="{{show.seriesName}}" style="object-fit: cover; height: 100%;">
           </a>
         </div>
-        {% if flag %}
-        <div class="col-6 col-md-3">
-          <div class="card-title">
-            {% if view_type == 'upcoming' %}
-            {{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}<br>
-            {% endif %}
-            <span class="show-title-text">{{show.seriesName}}</span> {% if show.delayWatch > 0 %}<span class="badge bg-info text-dark">{{ show.delayWatch }}</span>{% endif %}
 
-          </div>
-          <p class="card-text">
-            {% if show.next_episode.firstAired == time.date %}
-            <span class="badge bg-warning text-dark">New</span> 
-            {% endif %}
-            <small class="text-body-secondary">S{{show.next_episode.season.number}} |
-              E{{show.next_episode.number}} 
-              {% if show.total_aired_episodes|sub:show.episode_watch_count > 1 %}
-              +{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}
+        {% if flag %}
+          <!-- Episode Info Column -->
+          <div class="col-7 col-md-8 px-3 py-2">
+            <div class="card-title mb-1">
+              {% if view_type == 'upcoming' %}
+                <small class="text-muted d-block">{{show.next_episode.firstAired|date:"D"}} {{show.next_episode.firstAired}}</small>
               {% endif %}
-              </small></p>
-          <p class="card-text"><small class="text-body-secondary">
-          {% if show.next_episode.finaleType %}
-            <span class="badge bg-danger text-dark">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
-          {% endif %}
-          <a data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}">
-          {{show.next_episode.episodeName}}</a>
-          </small></p>
-          
-        </div>
-        <div class="col-1 col-md-1 align-self-center">
-          <form class='form-inline' action="/episode_swt" method="post">{% csrf_token %}
-            <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
-            <input type="hidden" name="home" value="home">
-            <input type="checkbox" onclick="this.form.submit();">
-          </form>
-        </div>
-        {% if show.is_watched %}
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped bg-success" role="progressbar"
-            style="width: {{ show.watched_pct }}%;" aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0"
-            aria-valuemax="{{show.total_episodes}}"></div>
-        </div>
-        {% else %}
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ show.watched_pct }}%;"
-            aria-valuenow="{{show.episode_watch_count}}" aria-valuemin="0" aria-valuemax="{{show.total_episodes}}"></div>
-        </div>
-        {% endif %}
-        {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
-        {% else %}
-        <div class="col-8 col-md-3">
-          <div class="card-title">
-            <span class="show-title-text">{{show.seriesName}}</span>
-            <p class="card-text"><small class="text-body-secondary">{{show.overview}}</small></p>
+              <span class="fw-bold show-title-text">{{show.seriesName}}</span> 
+              {% if show.delayWatch > 0 %}<span class="badge bg-info text-dark">{{ show.delayWatch }}</span>{% endif %}
+            </div>
+            
+            <p class="card-text mb-1">
+              {% if show.next_episode.firstAired == time.date %}
+                <span class="badge bg-warning text-dark">New</span> 
+              {% endif %}
+              <small class="text-body-secondary">S{{show.next_episode.season.number}} | E{{show.next_episode.number}}</small>
+              {% if show.total_aired_episodes|sub:show.episode_watch_count > 1 %}
+                <small class="text-muted">+{{ show.total_aired_episodes|sub:show.episode_watch_count|sub:1 }}</small>
+              {% endif %}
+            </p>
+
+            <p class="card-text mb-0">
+              {% if show.next_episode.finaleType %}
+                <span class="badge bg-danger text-dark mb-1">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
+              {% endif %}
+              <a href="#" data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}" class="text-decoration-none">
+                {{show.next_episode.episodeName}}
+              </a>
+            </p>
           </div>
-        </div>
+
+          <!-- Watched Checkbox Column -->
+          <div class="col-1 col-md-1 text-center pe-3">
+            <form class="d-inline" action="/episode_swt" method="post">{% csrf_token %}
+              <input type="hidden" name="episode_swt" value="{{show.next_episode.id}}">
+              <input type="hidden" name="home" value="home">
+              <input type="checkbox" class="form-check-input" style="transform: scale(1.3);" onclick="this.form.submit();" title="Mark as watched">
+            </form>
+          </div>
+
+          <!-- Progress Bar (Full Width inside card structure) -->
+          <div class="col-12">
+            <div class="progress rounded-0 rounded-bottom" style="height: 6px;">
+              <div class="progress-bar progress-bar-striped {% if show.is_watched %}bg-success{% endif %}" 
+                   role="progressbar" 
+                   style="width: {{ show.watched_pct }}%;" 
+                   aria-valuenow="{{show.episode_watch_count}}" 
+                   aria-valuemin="0" 
+                   aria-valuemax="{{show.total_episodes}}">
+              </div>
+            </div>
+          </div>
+
+          {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
+
+        {% else %}
+          <!-- Non-flag fallback overview block -->
+          <div class="col-8 col-md-9 p-3">
+            <div class="card-title mb-1">
+              <span class="fw-bold show-title-text">{{show.seriesName}}</span>
+            </div>
+            <p class="card-text mb-0"><small class="text-body-secondary">{{show.overview}}</small></p>
+          </div>
         {% endif %}
-      
       </div>
     </div>
     {% endfor %}
   </div>
 </div>
 
-<!-- Instant Type-to-Filter & Clear Control Script (Only initialized if search input exists) -->
+<!-- Instant Type-to-Filter & Clear Control Script -->
 <script>
   const searchInput = document.getElementById('showSearchInput');
   const showCards = document.querySelectorAll('.show-card');
