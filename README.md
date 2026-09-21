@@ -38,6 +38,27 @@ You can download the android app from [here](https://github.com/bryangerlach/epi
 4. Run: `docker compose up -d`
 5. Access your server from http://localhost:3000
 
+## Jellyfin Webhook Integration
+
+This application includes a webhook endpoint that automatically syncs watch progress from your **Jellyfin** server. When an episode finishes playing, Jellyfin pushes a notification to mark the corresponding episode as watched for the specific user in your app.
+
+### 1. Prerequisites
+* A running Jellyfin server instance that can access your Episode server.
+* The official **Webhook** plugin installed on your Jellyfin server.
+
+---
+
+### 2. Configuring the Webhook in Jellyfin
+
+1. Open your **Jellyfin Dashboard** as an administrator.
+2. Navigate to **Advanced** > **Webhooks** and click **Add Jellyfin Webhook** (or configure a new webhook destination).
+3. Set the **Webhook URL** using your app's endpoint pattern, replacing `<username>` with your exact user profile name in the Episodes app:
+   ```text
+   http://<your-django-host-ip-or-domain>/api/jellyfin-webhook/<username>/
+   Example: http://localhost:3000/api/jellyfin-webhook/bryan/
+4. Under Notification Types, select Playback Stop (triggered when playback is stopped or completed).
+5. Save your webhook configuration.
+
 ## Install Manually
 
 To use clone the production branch, install requirements, run the following terminal commands:
