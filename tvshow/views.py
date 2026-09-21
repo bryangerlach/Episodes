@@ -335,8 +335,9 @@ def single_movie(request, movie_slug):
 
 def stats_dashboard_view(request):
     # 1. Basic Counts
-    total_shows = Show.objects.count()
-    completed_shows = Show.objects.filter(status_watched=True).count()
+    shows = Show.objects.all()
+    total_shows = shows.count()
+    completed_shows = sum(1 for show in shows if show.is_watched)
     
     # 2. Watch Time Calculation (~45m per watched episode)
     watched_episodes = Episode.objects.filter(status_watched=True)
