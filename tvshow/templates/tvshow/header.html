@@ -124,36 +124,30 @@
             });
         }
 
+        function sendThemeToFlutter(theme) {
+            if (window.ThemeChannel && typeof theme === 'string' && theme.trim() !== '') {
+                window.ThemeChannel.postMessage(theme);
+            }
+        }
+
         let myTheme = getCookie("theme");
-        if (myTheme == "") {
+        if (myTheme === "" || myTheme === null || myTheme === undefined) {
             myTheme = "dark";
         }
         document.documentElement.setAttribute('data-bs-theme', myTheme);
 
-        // Notify Flutter of the initial theme when the page loads
-        if (window.ThemeChannel) {
-            window.ThemeChannel.postMessage(myTheme);
-        }
+        // Notify Flutter on initial load safely
+        sendThemeToFlutter(myTheme);
 
         document.getElementById('btnSwitch').addEventListener('click', () => {
-            if (document.documentElement.getAttribute('data-bs-theme') == 'dark') {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-                setCookie("theme", "light", 365);
-                
-                // Notify Flutter when switching to light mode
-                if (window.ThemeChannel) {
-                    window.ThemeChannel.postMessage('light');
-                }
-            }
-            else {
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
-                setCookie("theme", "dark", 365);
-                
-                // Notify Flutter when switching to dark mode
-                if (window.ThemeChannel) {
-                    window.ThemeChannel.postMessage('dark');
-                }
-            }
+            let currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            let newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            setCookie("theme", newTheme, 365);
+            
+            // Notify Flutter safely
+            sendThemeToFlutter(newTheme);
         });
         // Set a cookie
         function setCookie(name, value, days) {
