@@ -10,7 +10,7 @@ Inspired from https://github.com/jamienicol/episodes
 
 ## Android app
 
-You can download the android app from [here](https://github.com/bryangerlach/episodes-android/releases/tag/latest). It is a simple webview app and you will enter your url when the app opens (make sure to have a '/' at the end of your url like https://example.com/).
+You can download the android app from [here](https://github.com/bryangerlach/episodes_android/releases/tag/latest). It is a simple webview app and you will enter your url when the app opens (make sure to have a '/' at the end of your url like https://example.com/).
 
 ## Features
 
