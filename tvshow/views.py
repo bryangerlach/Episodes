@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
 from collections import Counter
+from django.db.models import Sum
 import os
 import json
 import random
@@ -338,8 +339,10 @@ def stats_dashboard_view(request):
     completed_shows = Show.objects.filter(status_watched=True).count()
     
     # 2. Watch Time Calculation (~45m per watched episode)
-    watched_episodes_count = Episode.objects.filter(status_watched=True).count()
-    total_hours_watched = round(watched_episodes_count * 0.75, 1)
+    watched_episodes = Episode.objects.filter(status_watched=True)
+    watched_episodes_count = watched_episodes.count()
+    total_minutes_watched = watched_episodes.aggregate(total=Sum('runtime'))['total'] or 0
+    total_hours_watched = round(total_minutes_watched / 60, 1)
     total_days_watched = round(total_hours_watched / 24, 1)
 
     # Aggregate genres
