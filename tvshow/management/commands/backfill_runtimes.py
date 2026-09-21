@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from tvshow.models import Show
 from tvshow.utils.tvdb_api_wrap import get_all_episodes, get_series_with_id
 
@@ -11,6 +12,15 @@ class Command(BaseCommand):
 
         for show in shows:
             if not show.tvdbID:
+                continue
+
+            # Smart check: Skip if all episodes already have a valid runtime (> 0)
+            missing_runtimes = show.season_set.filter(
+                Q(episode__runtime=0) | Q(episode__runtime__isnull=True)
+            ).exists()
+
+            if not missing_runtimes:
+                self.stdout.write(f"Skipping (already complete): {show.seriesName}")
                 continue
 
             self.stdout.write(f"Processing: {show.seriesName} (TVDB ID: {show.tvdbID})")
@@ -50,7 +60,7 @@ class Command(BaseCommand):
                         # Use episode runtime if available, otherwise series fallback
                         ep_runtime = ep_data.get('runtime') or series_runtime
 
-                        rows_updated = season_obj.episode_set.filter(tvdbID=ep_tvdb_id).update(runtime=ep_runtime)
+                        rows_updated = season_obj.episode_set.filter(tvdbID=ep_tvdb_id, runtime=0).update(runtime=ep_runtime)
                         if rows_updated > 0:
                             updated_count += rows_updated
 
