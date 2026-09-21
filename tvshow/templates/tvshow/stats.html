@@ -4,15 +4,16 @@
   <h1 class="mb-4 fw-bold">Viewing Statistics</h1>
 
   <!-- Top Summary Metric Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <div class="card shadow-sm border-0 bg-body-tertiary">
-        <div class="card-body">
-          <h6 class="text-muted text-uppercase fw-semibold">Estimated Watch Time</h6>
-          <h2 class="fw-bold text-primary mb-0">{{ total_hours_watched }} hrs</h2>
-        </div>
+  <div class="row text-center mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0 bg-body-tertiary">
+      <div class="card-body">
+        <h6 class="text-muted text-uppercase fw-semibold">Total Watch Time</h6>
+        <h2 class="fw-bold text-primary mb-0">{{ total_hours_watched }} hrs</h2>
+        <small class="text-muted">Across {{ watched_episodes_count }} watched episodes (~{{ total_days_watched }} days)</small>
       </div>
     </div>
+  </div>
     <div class="col-md-4">
       <div class="card shadow-sm border-0 bg-body-tertiary">
         <div class="card-body">
