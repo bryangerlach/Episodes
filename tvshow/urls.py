@@ -1,5 +1,6 @@
 from django.urls import re_path as url
 from tvshow import views as views
+from tvshow import api as api
 urlpatterns = [
     url(r'^(?P<view_type>|all|watch_later|stopped_watching|upcoming||)$', views.home),
     url(r'^update_all_shows', views.update_all_continuing),
@@ -32,5 +33,6 @@ urlpatterns = [
     url(r'^set_watch_delay', views.set_watch_delay),
     url(r'^(?P<view_type>|movies|movies_history|)$', views.movies),
     url(r'^recommendations', views.recommendations_page),
-    url(r'^stats', views.stats_dashboard_view)
+    url(r'^stats', views.stats_dashboard_view),
+    url(r'^api/jellyfin-webhook/(?P<username>[a-zA-Z0-9-_]+)/$', api.jellyfin_webhook_view)
 ]
