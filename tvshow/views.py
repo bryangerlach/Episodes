@@ -1,15 +1,12 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, JsonResponse
-from django.views.decorators.csrf import csrf_protect
-from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id, get_image_from_search
-from .utils.recs_api_wrap import get_recommendations
+from django.http import HttpResponseRedirect
+from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id
 from .utils.utils import fetch_deduplicated_recommendations, extract_genres
 from .models import Show,Season,Episode,Movie
 from django.db.models import Q
 from django.contrib import messages
 from datetime import timedelta, datetime
 from django.utils import timezone
-from random import shuffle
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -17,8 +14,8 @@ from django.contrib.auth import authenticate
 from collections import Counter
 from django.db.models import Sum
 import os
-import json
 import random
+import re
 
 def login_view(request):
     if request.method == 'POST':
@@ -180,16 +177,29 @@ def recommendations_page(request):
     user_id = request.user.id
     user = User.objects.get(id=user_id)
     
-    # Grab active user shows (excluding stopped watching and watch later) and pick up to 5 random ones safely
+    # Grab active user shows and pick up to 5 random ones safely
     active_shows = list(user.show_set.filter(stopped_watching=False, watch_later=False))
     seed_shows = random.sample(active_shows, min(len(active_shows), 5)) if active_shows else []
     
     recommended_pool = []
+    seen_names = set() # Track by normalized name to ensure uniqueness across seed shows
     
     for show in seed_shows:
         show_recs = fetch_deduplicated_recommendations(user, show.seriesName, target_count=5)
         for rec in show_recs:
-            if rec not in recommended_pool:
+            name = rec.get('name')
+            if not name:
+                continue
+                
+            # Normalize name to check against global pool uniqueness
+            norm_name = re.sub(r'[^a-z0-9]', '', name.lower())
+            
+            if norm_name not in seen_names:
+                seen_names.add(norm_name)
+                
+                # Stamp the source show name into the dictionary
+                rec['because_show'] = show.seriesName
+                
                 recommended_pool.append(rec)
 
     return render(request, 'tvshow/recommendations.html', {

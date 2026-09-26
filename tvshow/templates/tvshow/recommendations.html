@@ -87,6 +87,9 @@ python manage.py runserver 0.0.0.0:3000</code></pre>
       <div class="col-md-6 mb-4">
         <div class="card p-3 h-100">
           <div class="row g-0 align-items-center">
+            {% if show.because_show %}
+              <p style="font-size: 0.8rem; color: #888888; margin-top: 4px; font-style: italic;"><em>Because you watched</em> <strong>{{ show.because_show }}</strong></p>
+            {% endif %}
             <div class="col-4">
               {% if show.image_url %}
                 <img src="{{ show.image_url }}" class="img-fluid rounded mx-auto d-block" alt="{{ show.name }}">
