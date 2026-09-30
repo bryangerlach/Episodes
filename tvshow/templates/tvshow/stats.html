@@ -3,6 +3,15 @@
 <div class="container py-4">
   <h1 class="mb-4 fw-bold">Viewing Statistics</h1>
 
+  <!-- Time Range Selector Buttons -->
+    <div class="btn-group shadow-sm" role="group" aria-label="Time Range Selector">
+      <a href="?range=today" class="btn btn-outline-primary {% if time_range == 'today' %}active{% endif %}">Today</a>
+      <a href="?range=week" class="btn btn-outline-primary {% if time_range == 'week' %}active{% endif %}">1 Week</a>
+      <a href="?range=month" class="btn btn-outline-primary {% if time_range == 'month' %}active{% endif %}">1 Month</a>
+      <a href="?range=year" class="btn btn-outline-primary {% if time_range == 'year' %}active{% endif %}">1 Year</a>
+      <a href="?range=all" class="btn btn-outline-primary {% if time_range == 'all' or not time_range %}active{% endif %}">All Time</a>
+    </div>
+
   <!-- Top Summary Metric Cards -->
   <div class="row text-center mb-4">
   <div class="col-md-4">

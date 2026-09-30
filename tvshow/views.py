@@ -335,19 +335,46 @@ def single_movie(request, movie_slug):
     movie = Movie.objects.get(user=user, slug__iexact=movie_slug)
     return render(request, 'tvshow/single_movie.html', {'movie': movie})
 
+@login_required(login_url='/login')
 def stats_dashboard_view(request):
-    shows = Show.objects.all()
-    total_shows = shows.count()
-    completed_shows = sum(1 for show in shows if show.is_watched)
+    time_range = request.GET.get('range', 'all')
+    now_date = timezone.now().date()
     
+    # Base watched episodes query
     watched_episodes = Episode.objects.filter(status_watched=True)
+    
+    # Filter based on selected time range
+    if time_range == 'today':
+        watched_episodes = watched_episodes.filter(date_watched=now_date)
+    elif time_range == 'week':
+        start_date = now_date - timedelta(days=7)
+        watched_episodes = watched_episodes.filter(date_watched__gte=start_date)
+    elif time_range == 'month':
+        start_date = now_date - timedelta(days=30)
+        watched_episodes = watched_episodes.filter(date_watched__gte=start_date)
+    elif time_range == 'year':
+        start_date = now_date - timedelta(days=365)
+        watched_episodes = watched_episodes.filter(date_watched__gte=start_date)
+        
     watched_episodes_count = watched_episodes.count()
     total_minutes_watched = watched_episodes.aggregate(total=Sum('runtime'))['total'] or 0
     total_hours_watched = round(total_minutes_watched / 60, 1)
     total_days_watched = round(total_hours_watched / 24, 1)
 
+    # Basic show counts (all-time library metrics)
+    shows = Show.objects.all()
+    total_shows = shows.count()
+    completed_shows = sum(1 for show in shows if show.is_watched)
+
+    # Aggregate genres dynamically based on the filtered time range
     genre_counter = Counter()
-    for s in shows:
+    if time_range == 'all':
+        genre_shows = shows
+    else:
+        show_ids = watched_episodes.values_list('season__show', flat=True).distinct()
+        genre_shows = Show.objects.filter(id__in=show_ids)
+
+    for s in genre_shows:
         for g in extract_genres(s):
             genre_counter[g] += 1
 
@@ -370,6 +397,7 @@ def stats_dashboard_view(request):
         'total_days_watched': total_days_watched,
         'genre_labels': genre_labels,
         'genre_counts': genre_counts,
+        'time_range': time_range,
     }
     return render(request, 'tvshow/stats.html', context)
 
