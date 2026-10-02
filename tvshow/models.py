@@ -130,11 +130,11 @@ class Show(models.Model):
 
     @property
     def upcoming_episode(self):
-        # Finds the very next episode airing today or in the future
         today = timezone.now().date()
         return Episode.objects.filter(
             Q(season__show=self), 
-            Q(firstAired__gte=today)
+            Q(firstAired__gte=today),
+            Q(status_watched=False)
         ).order_by('firstAired', 'number').first()
     
     def refresh_show_data(self):

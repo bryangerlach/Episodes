@@ -68,7 +68,7 @@
 
   <div id="showsContainer">
     {% for show in show_data %}
-    <div class="card mb-3 show-card shadow-sm" style="max-width: 540px;" data-name="{{ show.seriesName|lower }}">
+    <div class="card mb-3 show-card shadow-sm" style="max-width: 540px; touch-action: pan-y;" data-name="{{ show.seriesName|lower }}">
       <div class="row g-0 align-items-center">
         <!-- Poster Column -->
         <div class="col-4 col-sm-3">
@@ -78,8 +78,8 @@
         </div>
 
         {% if flag %}
-          <!-- Episode Info Column -->
-          <div class="col-7 col-md-8 px-3 py-2">
+          <!-- Episode Info Column (Expands on mobile to fill width, shrinks slightly on desktop to make room for checkbox) -->
+          <div class="col-8 col-sm-9 col-md-8 px-3 py-2">
             <div class="card-title mb-1">
               {% if view_type == 'upcoming' %}
                 <small class="text-muted d-block">{{show.display_episode.firstAired|date:"D"}} {{show.display_episode.firstAired}}</small>
@@ -107,25 +107,31 @@
                 <span class="badge bg-danger text-dark mb-1">{{show.next_episode.finaleType|capfirst}} Finale</span><br>
               {% endif %}
               {% if view_type == 'upcoming' %}
-                <a href="#" data-bs-toggle="modal" data-bs-target="#s{{show.display_episode.tvdbID}}" class="text-decoration-none">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#s{{show.display_episode.tvdbID}}" class="text-decoration-none" onclick="event.stopPropagation();">
                   {{show.display_episode.episodeName}}
                 </a>
               {% else %}
-                <a href="#" data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}" class="text-decoration-none">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#s{{show.next_episode.tvdbID}}" class="text-decoration-none" onclick="event.stopPropagation();">
                   {{show.next_episode.episodeName}}
                 </a>
               {% endif %}
             </p>
           </div>
 
-          <!-- Watched Checkbox Column -->
-          <div class="col-1 col-md-1 text-center pe-3">
+          <!-- Desktop Checkbox Column (Hidden on mobile via d-none, visible on md screens and up) -->
+          <div class="col-md-1 text-center pe-3 d-none d-md-block">
             <form class="d-inline" action="/episode_swt" method="post">{% csrf_token %}
               <input type="hidden" name="episode_swt" value="{% if view_type == 'upcoming' %}{{show.display_episode.id}}{% else %}{{show.next_episode.id}}{% endif %}">
               <input type="hidden" name="home" value="home">
               <input type="checkbox" class="form-check-input" style="transform: scale(1.3);" onclick="this.form.submit();" title="Mark as watched">
             </form>
           </div>
+
+          <!-- Hidden Swipe Form Action (Used by mobile swipe gesture) -->
+          <form class="swipe-form d-none" action="/episode_swt" method="post">{% csrf_token %}
+            <input type="hidden" name="episode_swt" value="{% if view_type == 'upcoming' %}{{show.display_episode.id}}{% else %}{{show.next_episode.id}}{% endif %}">
+            <input type="hidden" name="home" value="home">
+          </form>
 
           <!-- Progress Bar -->
           <div class="col-12">
@@ -148,7 +154,7 @@
 
         {% else %}
           <!-- Non-flag fallback overview block -->
-          <div class="col-8 col-md-9 p-3">
+          <div class="col-8 col-sm-9 p-3">
             <div class="card-title mb-1">
               <span class="fw-bold show-title-text">{{show.seriesName}}</span>
             </div>
@@ -161,8 +167,50 @@
   </div>
 </div>
 
-<!-- Instant Type-to-Filter & Clear Control Script -->
+<!-- Scripts -->
 <script>
+  // Enable swipe gesture ONLY on touch-enabled mobile/tablet devices
+  const isTouchDevice = window.matchMedia('(hover: none)').matches;
+
+  if (isTouchDevice) {
+    document.querySelectorAll('.show-card').forEach(card => {
+      let startX = 0;
+      let isDragging = false;
+
+      card.addEventListener('pointerdown', e => {
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        startX = e.clientX;
+        isDragging = true;
+        card.setPointerCapture(e.pointerId);
+      });
+
+      card.addEventListener('pointerup', e => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        const endX = e.clientX;
+        const diff = endX - startX;
+        const threshold = 50; // Minimum swipe distance in pixels
+
+        if (Math.abs(diff) > threshold) {
+          const form = card.querySelector('.swipe-form');
+          if (form) {
+            card.style.transition = 'transform 0.2s ease';
+            card.style.transform = diff > 0 ? 'translateX(30px)' : 'translateX(-30px)';
+            setTimeout(() => {
+              form.submit();
+            }, 150);
+          }
+        }
+      });
+
+      card.addEventListener('pointercancel', () => {
+        isDragging = false;
+      });
+    });
+  }
+
+  // Instant Type-to-Filter & Clear Control Script
   const searchInput = document.getElementById('showSearchInput');
   const showCards = document.querySelectorAll('.show-card');
   const clearWrapper = document.getElementById('clearFiltersWrapper');
