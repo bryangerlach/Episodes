@@ -168,6 +168,14 @@
 </div>
 
 <!-- Scripts -->
+<style>
+  /* Smooth out the card slide and fade transition */
+  .show-card {
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+  }
+</style>
+
+<!-- Scripts -->
 <script>
   // Enable swipe gesture ONLY on touch-enabled mobile/tablet devices
   const isTouchDevice = window.matchMedia('(hover: none)').matches;
@@ -175,13 +183,25 @@
   if (isTouchDevice) {
     document.querySelectorAll('.show-card').forEach(card => {
       let startX = 0;
+      let currentX = 0;
       let isDragging = false;
 
       card.addEventListener('pointerdown', e => {
         if (e.target.closest('a') || e.target.closest('button')) return;
         startX = e.clientX;
         isDragging = true;
+        card.style.transition = 'none'; // Disable transition during active drag for responsiveness
         card.setPointerCapture(e.pointerId);
+      });
+
+      card.addEventListener('pointermove', e => {
+        if (!isDragging) return;
+        currentX = e.clientX;
+        const diff = currentX - startX;
+        
+        // Optional: Only allow swiping in a positive direction or freely both ways. 
+        // Let's allow smooth movement tracking the finger:
+        card.style.transform = `translateX(${diff}px)`;
       });
 
       card.addEventListener('pointerup', e => {
@@ -190,22 +210,46 @@
 
         const endX = e.clientX;
         const diff = endX - startX;
-        const threshold = 50; // Minimum swipe distance in pixels
+        const threshold = 110; // Minimum distance to trigger full dismissal
+
+        const form = card.querySelector('.swipe-form');
 
         if (Math.abs(diff) > threshold) {
-          const form = card.querySelector('.swipe-form');
+          // Swipe triggered: Animate completely off screen
+          card.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+          const directionMultiplier = diff > 0 ? 1 : -1;
+          card.style.transform = `translateX(${directionMultiplier * window.innerWidth}px)`;
+          card.style.opacity = '0';
+
+          // Leave a "Watched" message in its place temporarily
+          setTimeout(() => {
+            card.innerHTML = `
+              <div class="card-body text-center py-4 bg-light text-success fw-bold">
+                ✓ Watched
+              </div>
+            `;
+            card.style.transform = 'translateX(0)';
+            card.style.opacity = '1';
+          }, 200);
+
+          // Submit form in background
           if (form) {
-            card.style.transition = 'transform 0.2s ease';
-            card.style.transform = diff > 0 ? 'translateX(30px)' : 'translateX(-30px)';
             setTimeout(() => {
               form.submit();
-            }, 150);
+            }, 300);
           }
+        } else {
+          // Spring back if threshold wasn't met
+          card.style.transition = 'transform 0.2s ease';
+          card.style.transform = 'translateX(0)';
         }
       });
 
       card.addEventListener('pointercancel', () => {
+        if (!isDragging) return;
         isDragging = false;
+        card.style.transition = 'transform 0.2s ease';
+        card.style.transform = 'translateX(0)';
       });
     });
   }
