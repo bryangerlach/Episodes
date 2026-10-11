@@ -71,7 +71,7 @@
     <!-- Swipe Wrapper -->
     <div class="swipe-card-wrapper position-relative mb-3" style="max-width: 540px;" data-name="{{ show.seriesName|lower }}">
       
-      <!-- Background Reveal Layer with Left and Right Labels -->
+      <!-- Background Reveal Layer -->
       <div class="swipe-bg position-absolute top-0 bottom-0 start-0 end-0 bg-success text-white d-flex align-items-center justify-content-between px-4 fw-bold rounded shadow-sm">
         <span>✓ Mark Watched</span>
         <span>✓ Mark Watched</span>
@@ -156,12 +156,6 @@
               </div>
             </div>
 
-            {% if view_type == 'upcoming' %}
-              {% include 'tvshow/episode_modal_snippet.html' with episode=show.display_episode %}
-            {% else %}
-              {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
-            {% endif %}
-
           {% else %}
             <!-- Non-flag fallback overview block -->
             <div class="col-8 col-sm-9 p-3">
@@ -174,6 +168,16 @@
         </div>
       </div>
     </div>
+
+    <!-- MOVED OUTSIDE WRAPPER: Episode Modal Snippet Renders Cleanly Here -->
+    {% if flag %}
+      {% if view_type == 'upcoming' %}
+        {% include 'tvshow/episode_modal_snippet.html' with episode=show.display_episode %}
+      {% else %}
+        {% include 'tvshow/episode_modal_snippet.html' with episode=show.next_episode %}
+      {% endif %}
+    {% endif %}
+
     {% endfor %}
   </div>
 </div>
