@@ -58,6 +58,21 @@
           </select>
         </div>
 
+        <!-- Country Filter -->
+        <div class="col-auto">
+          <label for="country-select" class="col-form-label fw-bold ms-2">Country:</label>
+        </div>
+        <div class="col-auto">
+          <select name="country" id="country-select" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All Countries</option>
+            {% for country in available_countries %}
+              <option value="{{ country }}" {% if country_filter == country %}selected{% endif %}>
+                {{ country|upper }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
         <!-- Clear Filters / Search Button -->
         <div class="col-auto" id="clearFiltersWrapper" style="display: {% if genre_filter or language_filter %}block{% else %}none{% endif %};">
           <a href="?" id="clearFiltersBtn" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
@@ -200,8 +215,12 @@
 <!-- Scripts -->
 <script>
   const isTouchDevice = window.matchMedia('(hover: none)').matches;
+  const viewType = "{{ view_type }}";
 
-  if (isTouchDevice) {
+  // Enable swipe gesture ONLY on touch devices and ONLY on views with checkboxes (Upcoming or default Watch Next / empty view)
+  const isAllowedView = (viewType === '' || viewType === 'upcoming');
+
+  if (isTouchDevice && isAllowedView) {
     document.querySelectorAll('.swipe-card-wrapper').forEach(wrapper => {
       const card = wrapper.querySelector('.show-card');
       const bgLayer = wrapper.querySelector('.swipe-bg');
@@ -300,7 +319,7 @@
   const clearWrapper = document.getElementById('clearFiltersWrapper');
   const clearBtn = document.getElementById('clearFiltersBtn');
   
-  const hasServerFilters = {% if genre_filter or language_filter %}true{% else %}false{% endif %};
+  const hasServerFilters = {% if genre_filter or language_filter or country_filter %}true{% else %}false{% endif %};
 
   if (searchInput) {
     searchInput.addEventListener('input', function(e) {

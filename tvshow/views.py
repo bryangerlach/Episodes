@@ -65,18 +65,23 @@ def home(request, view_type):
     
     genre_filter = request.GET.get('genre', '').strip()
     language_filter = request.GET.get('language', '').strip()
+    country_filter = request.GET.get('country', '').strip()
 
     available_genres = set()
     available_languages = set()
+    available_countries = set()
     
     for s in base_shows:
         for g in extract_genres(s):
             available_genres.add(g)
         if s.language:
             available_languages.add(s.language.strip())
+        if hasattr(s, 'original_country') and s.original_country:
+            available_countries.add(s.original_country.strip())
             
     available_genres = sorted(list(available_genres))
     available_languages = sorted(list(available_languages))
+    available_countries = sorted(list(available_countries))
 
     # OPTIMIZATION: Filter at the database query level where possible
     if view_type == 'all':
@@ -121,6 +126,9 @@ def home(request, view_type):
 
     if language_filter:
         show_data = [show for show in show_data if show.language and show.language.strip().lower() == language_filter.lower()]
+
+    if country_filter:
+        show_data = [show for show in show_data if hasattr(show, 'original_country') and show.original_country and show.original_country.strip().lower() == country_filter.lower()]
         
     return render(request, 'tvshow/home.html', {
         'show_data': show_data, 
@@ -129,8 +137,10 @@ def home(request, view_type):
         'view_type': view_type,
         'genre_filter': genre_filter,
         'language_filter': language_filter,
+        'country_filter': country_filter,
         'available_genres': available_genres,
-        'available_languages': available_languages
+        'available_languages': available_languages,
+        'available_countries': available_countries
     })
     
 @login_required(login_url='/login')

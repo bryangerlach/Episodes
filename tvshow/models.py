@@ -17,7 +17,6 @@ class Show(models.Model):
     banner = models.CharField(max_length=150, null=True, blank=True)
     imdbID = models.CharField(max_length=50, null=True, blank=True)
     
-    # OPTIMIZATION: Added db_index=True for faster filtered queries
     status_watched = models.BooleanField(default=False, db_index=True)
     slug = models.SlugField(null=True, blank=True)
     runningStatus = models.CharField(max_length=50, db_index=True)
@@ -30,11 +29,11 @@ class Show(models.Model):
     genre_list = models.TextField(null=True, blank=True)
     last_updated = models.DateTimeField(null=True, blank=True)
     
-    # OPTIMIZATION: Added db_index=True for watchlist and tab filtering
     watch_later = models.BooleanField(default=False, db_index=True)
     stopped_watching = models.BooleanField(default=False, db_index=True)
     
     language = models.CharField(max_length=10, default='eng')
+    original_country = models.CharField(max_length=10, blank=True, null=True)
     airsDays = models.JSONField(default=dict)
     airsTime = models.CharField(max_length=10, null=True)
     delayWatch = models.IntegerField(default=0)  # how many days to delay showing on "watch next"
@@ -45,6 +44,7 @@ class Show(models.Model):
     def add_show(self, data, runningStatus, user):
         self.user = user
         self.language = data.get('originalLanguage', 'eng')
+        self.original_country = data.get('originalCountry', 'unknown')
         if runningStatus == 'Continuing':
             try:
                 self.airsDays = data['airsDays']
