@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from .utils.tvdb_api_wrap import search_series_list, get_series_with_id, get_all_episodes, get_image_link, get_series_translation, search_movie_list, get_movie_with_id
 from .utils.utils import fetch_deduplicated_recommendations, extract_genres
 from .models import Show, Season, Episode, Movie
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from django.contrib import messages
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -399,6 +399,20 @@ def stats_dashboard_view(request):
             genre_labels.append('Other')
             genre_counts.append(other_sum)
 
+    # Top 5 watched shows for the selected time frame, based on episodes watched
+    top_shows = [
+        {
+            'name': item['season__show__seriesName'],
+            'count': item['ep_count'],
+        }
+        for item in (
+            watched_episodes
+            .values('season__show__id', 'season__show__seriesName')
+            .annotate(ep_count=Count('id'))
+            .order_by('-ep_count')[:5]
+        )
+    ]
+
     context = {
         'total_shows': total_shows,
         'completed_shows': completed_shows,
@@ -407,6 +421,7 @@ def stats_dashboard_view(request):
         'total_days_watched': total_days_watched,
         'genre_labels': genre_labels,
         'genre_counts': genre_counts,
+        'top_shows': top_shows,
         'time_range': time_range,
     }
     return render(request, 'tvshow/stats.html', context)

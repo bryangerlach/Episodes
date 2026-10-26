@@ -55,11 +55,37 @@
       </div>
     </div>
     
-    <!-- Quick Info / Placeholder Card -->
+    <!-- Top Shows -->
     <div class="col-lg-6">
-      <div class="card shadow-sm border-0 p-4 h-100 d-flex flex-column justify-content-center text-center">
-        <h4 class="fw-bold mb-3">Keep Track & Binge On</h4>
-        <p class="text-muted mb-0">Your statistics update automatically every time you check off episodes from your Watch Next or All Shows lists.</p>
+      <div class="card shadow-sm border-0 p-3 h-100">
+        <h5 class="card-title fw-bold mb-3">Top Shows</h5>
+        <div class="small text-muted mb-3">Top 5 by episodes watched</div>
+        {% if top_shows %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th style="width: 10%;" class="text-muted">#</th>
+                  <th class="text-muted">Show</th>
+                  <th style="width: 18%;" class="text-muted text-end">Episodes Watched</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for show in top_shows %}
+                  <tr>
+                    <td class="fw-semibold text-primary">{{ forloop.counter }}</td>
+                    <td>{{ show.name }}</td>
+                    <td class="text-end fw-bold">{{ show.count }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center text-muted py-4">
+            <p class="mb-0">No watched episodes in this time frame.</p>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
