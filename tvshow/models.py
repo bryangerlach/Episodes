@@ -184,50 +184,77 @@ class Show(models.Model):
                 pass
         self.save()
         if season_to_update == '0':
-            current_season = self.season_set.all().last()
-        else:
-            current_season = self.season_set.get(number=season_to_update)
-        current_season_db_data = current_season.episode_set.all()
-        current_season_oln_data = get_season_episode_list(tvdbID, current_season.number)
-        if current_season_oln_data:
-            oln_episodes = current_season_oln_data['episodes']
-            active_episode_ids = []
-            for oln_episode in oln_episodes:
-                tvdb_id_str = str(oln_episode['id'])
-                db_episode = current_season_db_data.filter(tvdbID=tvdb_id_str).first()
-                if db_episode:
-                    db_episode.compare_or_update(oln_episode)
-                    active_episode_ids.append(db_episode.id)
-                else:
-                    if oln_episode.get('name') == "":
-                        oln_episode['name'] = 'TBA'
-                    new_episode = Episode()
-                    new_episode.add_episode(current_season, oln_episode)
-                    new_episode.tvdbID = tvdb_id_str
-                    new_episode.save()
-                    active_episode_ids.append(new_episode.id)
+            seasons = self.season_set.all().order_by('number')
+            max_season_number = 0
+            for season in seasons:
+                if self._sync_season_episodes(season):
                     flag = True
+                max_season_number = max(max_season_number, season.number)
+            # Add any new seasons beyond the highest season we already have.
+            # (If the show has no seasons yet, start from season 1.)
+            range_starter = max_season_number + 1 if max_season_number > 0 else 1
+        else:
+            range_starter = None
 
-            current_season_db_data.exclude(id__in=active_episode_ids).delete()
         if season_to_update == '0':
-            range_starter = current_season.number + 1
             new_seasons = get_all_episodes(tvdbID, range_starter)
             for i in range(len(new_seasons)):
-                string = 'Season' + str(range_starter+i)
+                season_number = range_starter + i
+                string = 'Season' + str(season_number)
                 season_data = new_seasons[string]
-                season = Season()
-                season.add_season(self, i+range_starter)
-                season_episodes_data = new_seasons[string]
+                # Avoid creating a duplicate season row when the season already
+                # exists (added manually or by a previous run).
+                season = self.season_set.filter(number=season_number).first()
+                if not season:
+                    season = Season()
+                    season.add_season(self, season_number)
+                season_episodes_data = season_data.get('episodes', [])
                 flag = True
                 for season_episode in season_episodes_data:
                     try:
-                        if season_episode['name']:
+                        if season_episode.get('name'):
                             episode = Episode()
                             episode.add_episode(season, season_episode)
                     except Exception:
                         pass
+        else:
+            current_season = self.season_set.get(number=season_to_update)
+            if self._sync_season_episodes(current_season):
+                flag = True
 
         return flag
+
+    def _sync_season_episodes(self, season):
+        """Sync a single season's episodes with TVDB.
+
+        Returns True if any new episode was added to the database.
+        """
+        tvdbID = self.tvdbID
+        current_season_db_data = season.episode_set.all()
+        current_season_oln_data = get_season_episode_list(tvdbID, season.number)
+        if not current_season_oln_data:
+            return False
+        oln_episodes = current_season_oln_data.get('episodes', [])
+        active_episode_ids = []
+        changed = False
+        for oln_episode in oln_episodes:
+            tvdb_id_str = str(oln_episode['id'])
+            db_episode = current_season_db_data.filter(tvdbID=tvdb_id_str).first()
+            if db_episode:
+                db_episode.compare_or_update(oln_episode)
+                active_episode_ids.append(db_episode.id)
+            else:
+                if oln_episode.get('name') == "":
+                    oln_episode['name'] = 'TBA'
+                new_episode = Episode()
+                new_episode.add_episode(season, oln_episode)
+                new_episode.tvdbID = tvdb_id_str
+                new_episode.save()
+                active_episode_ids.append(new_episode.id)
+                changed = True
+
+        current_season_db_data.exclude(id__in=active_episode_ids).delete()
+        return changed
     
     def update_imdb(self):
         online_show_data = get_series_with_id(self.tvdbID)

@@ -171,6 +171,158 @@ class ShowModelTests(ModelTestHelpersMixin, TestCase):
             self.assertEqual(show.airsTime, '20:00')
 
 
+class ShowUpdateDataTests(ModelTestHelpersMixin, TestCase):
+    """Tests for Show.update_show_data(), used by the cron job and manual update."""
+
+    def setUp(self):
+        self.user = self.create_user()
+        self.show = self.create_show(self.user, tvdbID='123', runningStatus='Continuing')
+
+    SHOW_DATA = {
+        'image': 'http://banner.example',
+        'latestNetwork': {'name': 'Net'},
+        'airsDays': {},
+        'airsTime': '20:00',
+    }
+
+    def _episode_payload(self, ep_id, name, number, aired='', runtime=0, overview='', image=''):
+        return {
+            'id': ep_id,
+            'name': name,
+            'number': str(number),
+            'aired': aired,
+            'runtime': runtime,
+            'finaleType': None,
+            'overview': overview,
+            'image': image,
+        }
+
+    @patch('tvshow.models.get_episode_extended', return_value={'remoteIds': []})
+    @patch('tvshow.models.get_episode', return_value={'image': 'http://epimg'})
+    @patch('tvshow.models.get_all_episodes', return_value={})
+    @patch('tvshow.models.get_season_episode_list')
+    @patch('tvshow.models.get_series_with_id')
+    def test_updates_current_season_when_future_season_exists(
+        self, mock_series, mock_season, mock_all, mock_ep, mock_extended
+    ):
+        # Season 1 is currently airing; Season 2 is a future/renewed season.
+        # The old code used season_set.all().last() -> Season 2, so Season 1
+        # was never refreshed by the cron even while it was airing.
+        mock_series.return_value = self.SHOW_DATA
+        s1 = self.create_season(self.show, number=1)
+        self.create_episode(s1, number=1, name='Old Name', tvdbID='s1e1')
+        s2 = self.create_season(self.show, number=2)
+        self.create_episode(s2, number=1, name='Future Ep', tvdbID='s2e1')
+
+        def season_payload(tvdbID, number):
+            if number == 1:
+                return {'episodes': [
+                    self._episode_payload('s1e1', 'New Name', 1, aired='2020-01-01', runtime=30, overview='ov'),
+                    self._episode_payload('s1e2', 'Episode 2', 2, aired='2020-02-01', runtime=30, overview='ov2'),
+                ]}
+            if number == 2:
+                return {'episodes': [
+                    self._episode_payload('s2e1', 'Future Ep', 1, aired='2020-01-01', runtime=30, overview=''),
+                ]}
+            return None
+
+        mock_season.side_effect = season_payload
+
+        flag = self.show.update_show_data('0')
+
+        s1.refresh_from_db()
+        ep = s1.episode_set.get(tvdbID='s1e1')
+        self.assertEqual(ep.episodeName, 'New Name')
+        self.assertEqual(str(ep.firstAired), '2020-01-01')
+        # A new episode also appeared for the current season.
+        self.assertTrue(s1.episode_set.filter(tvdbID='s1e2', episodeName='Episode 2').exists())
+        self.assertTrue(flag)
+        # Season 2 still exists and was synced too.
+        self.assertTrue(self.show.season_set.filter(number=2).exists())
+
+    @patch('tvshow.models.get_episode_extended', return_value={'remoteIds': []})
+    @patch('tvshow.models.get_episode', return_value={'image': 'http://epimg'})
+    @patch('tvshow.models.get_all_episodes', return_value={})
+    @patch('tvshow.models.get_season_episode_list')
+    @patch('tvshow.models.get_series_with_id')
+    def test_sparse_season_gets_new_episodes_when_data_becomes_available(
+        self, mock_series, mock_season, mock_all, mock_ep, mock_extended
+    ):
+        # Season 1 was first added with only a TBA placeholder episode. Once the
+        # online database lists more episodes, the cron must add them instead of
+        # giving up because the season already existed.
+        mock_series.return_value = self.SHOW_DATA
+        s1 = self.create_season(self.show, number=1)
+        self.create_episode(s1, number=1, name='TBA', tvdbID='s1e1')
+
+        def season_payload(tvdbID, number):
+            if number == 1:
+                return {'episodes': [
+                    self._episode_payload('s1e1', 'TBA', 1, aired='', runtime=0, overview='', image=''),
+                    self._episode_payload('s1e2', 'Real Episode 2', 2, aired='2020-02-01', runtime=30, overview='ov2', image='http://img2'),
+                ]}
+            return None
+
+        mock_season.side_effect = season_payload
+
+        flag = self.show.update_show_data('0')
+
+        s1.refresh_from_db()
+        self.assertEqual(s1.episode_set.count(), 2)
+        self.assertTrue(s1.episode_set.filter(tvdbID='s1e2', episodeName='Real Episode 2').exists())
+        ep2 = s1.episode_set.get(tvdbID='s1e2')
+        self.assertEqual(str(ep2.firstAired), '2020-02-01')
+        self.assertTrue(flag)
+
+    @patch('tvshow.models.get_episode_extended', return_value={'remoteIds': []})
+    @patch('tvshow.models.get_episode', return_value={'image': 'http://epimg'})
+    @patch('tvshow.models.get_all_episodes')
+    @patch('tvshow.models.get_season_episode_list')
+    @patch('tvshow.models.get_series_with_id')
+    def test_new_seasons_beyond_existing_are_created(
+        self, mock_series, mock_season, mock_all, mock_ep, mock_extended
+    ):
+        # The show has season 1 only; online also has seasons 2 and 3, which
+        # should be created by the update.
+        mock_series.return_value = self.SHOW_DATA
+        s1 = self.create_season(self.show, number=1)
+        self.create_episode(s1, number=1, name='Ep 1', tvdbID='s1e1')
+
+        def season_payload(tvdbID, number):
+            if number == 1:
+                return {'episodes': [self._episode_payload('s1e1', 'Ep 1', 1, aired='2020-01-01', runtime=30)]}
+            return None
+
+        mock_season.side_effect = season_payload
+        mock_all.return_value = {
+            'Season2': {'episodes': [self._episode_payload('s2e1', 'S2E1', 1, aired='2021-01-01', runtime=30)]},
+            'Season3': {'episodes': [self._episode_payload('s3e1', 'S3E1', 1, aired='2022-01-01', runtime=30)]},
+        }
+
+        self.show.update_show_data('0')
+
+        self.assertEqual(self.show.season_set.count(), 3)
+        self.assertTrue(self.show.season_set.filter(number=2).exists())
+        self.assertTrue(self.show.season_set.filter(number=3).exists())
+        self.assertEqual(
+            self.show.season_set.get(number=2).episode_set.get(tvdbID='s2e1').episodeName, 'S2E1'
+        )
+
+    @patch('tvshow.models.get_series_with_id')
+    @patch('tvshow.models.get_all_episodes')
+    def test_show_with_no_seasons_starts_from_season_one(self, mock_all, mock_series):
+        # A show added with no seasons should still pull season 1 from online.
+        mock_series.return_value = self.SHOW_DATA
+        mock_all.return_value = {
+            'Season1': {'episodes': [self._episode_payload('s1e1', 'Ep 1', 1, aired='2020-01-01', runtime=30)]},
+        }
+
+        self.show.update_show_data('0')
+
+        self.assertTrue(self.show.season_set.filter(number=1).exists())
+        self.assertEqual(self.show.season_set.get(number=1).episode_set.count(), 1)
+
+
 class SeasonModelTests(ModelTestHelpersMixin, TestCase):
     def setUp(self):
         self.user = self.create_user()
